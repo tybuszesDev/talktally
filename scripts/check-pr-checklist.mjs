@@ -13,11 +13,29 @@ const CHECKBOX = /^\s*[-*]\s+\[([ xX])\]\s+(.*)$/;
 const ISSUE_LINK = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i;
 
 /**
- * Markdown without HTML comments (hidden in the rendered description) and with LF line endings.
+ * Markdown that renders as checklists and closing keywords: without HTML comments (hidden) and
+ * fenced code blocks (shown as code), with LF line endings.
  * @param {string} markdown
  */
 export function visibleText(markdown) {
-  return markdown.replace(/<!--[\s\S]*?-->/g, '').replace(/\r\n/g, '\n');
+  const lines = markdown
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\r\n/g, '\n')
+    .split('\n');
+  const visible = [];
+  let fence;
+  for (const line of lines) {
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      // A fence closes with the same character, at least as long as the opening one.
+      if (marker?.[0] === fence[0] && marker.length >= fence.length) fence = undefined;
+    } else if (marker) {
+      fence = marker;
+    } else {
+      visible.push(line);
+    }
+  }
+  return visible.join('\n');
 }
 
 /**
