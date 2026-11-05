@@ -21,8 +21,9 @@ body:
     id: steps
     attributes:
       label: Steps to reproduce
-      value: |
-        1.
+      placeholder: |
+        1. Open ...
+        2. Tap ...
     validations:
       required: true
   - type: dropdown

@@ -20,8 +20,8 @@ body:
     attributes:
       label: Acceptance criteria
       description: Concrete and testable, one checkbox each.
-      value: |
-        - [ ]
+      placeholder: |
+        - [ ] A testable outcome
     validations:
       required: true
   - type: textarea

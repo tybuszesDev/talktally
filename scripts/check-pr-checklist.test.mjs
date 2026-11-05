@@ -27,13 +27,15 @@ function completeBody({ manual = [true, false] } = {}) {
     .join('\n');
 }
 
+const check = (body) => checkPullRequestBody(body, template);
+
 describe('checkPullRequestBody', () => {
   it('accepts a completed template', () => {
-    assert.deepEqual(checkPullRequestBody(completeBody()), []);
+    assert.deepEqual(check(completeBody()), []);
   });
 
   it('rejects the untouched template', () => {
-    const problems = checkPullRequestBody(template);
+    const problems = check(template);
     assert.ok(problems.includes('Link the issue with "Closes #<number>".'));
     assert.ok(problems.some((problem) => problem.startsWith('Definition of Done not ticked')));
     assert.ok(problems.includes('Tick exactly one box in "Manual test" (ticked: 0).'));
@@ -44,29 +46,51 @@ describe('checkPullRequestBody', () => {
       '- [x] Every acceptance criterion',
       '- [ ] Every acceptance criterion',
     );
-    assert.deepEqual(checkPullRequestBody(body), [
+    assert.deepEqual(check(body), [
       'Definition of Done not ticked: Every acceptance criterion in the issue is met and checked',
     ]);
   });
 
+  it('rejects a Definition of Done list replaced by other items', () => {
+    const body = completeBody().replace(
+      /## Definition of Done[\s\S]*?## Manual test/,
+      '## Definition of Done\n\n- [x] done\n\n## Manual test',
+    );
+    const problems = check(body);
+    assert.equal(problems.length, 6);
+    assert.ok(problems.every((problem) => problem.startsWith('Definition of Done item missing')));
+  });
+
+  it('accepts notes added after an item', () => {
+    const body = completeBody().replace('What was checked:', 'What was checked: the CI run');
+    assert.deepEqual(check(body), []);
+  });
+
   it('rejects two ticked manual test boxes', () => {
-    assert.deepEqual(checkPullRequestBody(completeBody({ manual: [true, true] })), [
+    assert.deepEqual(check(completeBody({ manual: [true, true] })), [
       'Tick exactly one box in "Manual test" (ticked: 2).',
     ]);
   });
 
   it('accepts the second manual test box alone', () => {
-    assert.deepEqual(checkPullRequestBody(completeBody({ manual: [false, true] })), []);
+    assert.deepEqual(check(completeBody({ manual: [false, true] })), []);
+  });
+
+  it('reports a deleted manual test option', () => {
+    const body = completeBody().replace(/^- \[ \] No user-visible change.*$/m, '');
+    assert.deepEqual(check(body), [
+      'Manual test option missing: No user-visible change; verified by CI (and smoke tests on `dev` from M1)',
+    ]);
   });
 
   it('does not require the optional area checks', () => {
     const body = completeBody();
     assert.ok(body.includes('- [ ] UI:'));
-    assert.deepEqual(checkPullRequestBody(body), []);
+    assert.deepEqual(check(body), []);
   });
 
   it('reports missing template sections', () => {
-    assert.deepEqual(checkPullRequestBody('Closes #4\n\nJust a summary.'), [
+    assert.deepEqual(check('Closes #4\n\nJust a summary.'), [
       'The "Definition of Done" section from the template is missing.',
       'The "Manual test" section from the template is missing.',
     ]);
@@ -75,8 +99,17 @@ describe('checkPullRequestBody', () => {
   it('accepts Fixes and Resolves as issue links', () => {
     for (const keyword of ['Fixes', 'resolves']) {
       const body = completeBody().replace('Closes #4', `${keyword} #4`);
-      assert.deepEqual(checkPullRequestBody(body), []);
+      assert.deepEqual(check(body), []);
     }
+  });
+
+  it('ignores an issue link hidden in an HTML comment', () => {
+    const body = completeBody().replace('Closes #4', '<!-- Closes #4 -->');
+    assert.deepEqual(check(body), ['Link the issue with "Closes #<number>".']);
+  });
+
+  it('fails loudly when the template has no checklist', () => {
+    assert.throws(() => checkPullRequestBody('Closes #4', '## Summary'), /needs/);
   });
 });
 
