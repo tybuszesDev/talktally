@@ -1,6 +1,6 @@
 # Domain model
 
-- Status: Accepted 2026-11-05. The section [Daily plan allocation](#daily-plan-allocation) was added after the review and is still a draft.
+- Status: Accepted 2026-11-05
 - Related: [ADR-0006](adr/0006-dynamodb-single-table.md) (data store), [ADR-0008](adr/0008-ai-proposes-changes-code-applies-them.md) (change sets), [ADR-0009](adr/0009-templates-over-fixed-domain-primitives.md) (templates)
 
 ## Conventions
@@ -23,9 +23,15 @@
 | `timeZone` | string | IANA name, default `Europe/Warsaw` |
 | `dictationLanguage` | string | default `pl-PL` |
 | `autoApplyThreshold` | decimal | default `0.85` |
-| `dailyCapacityMinutes` | map | minutes available for planned work, per weekday; default 240 for every day |
+| `dailyCapacity` | object | `{ defaultMinutes, weekdayOverrides }`; see below |
 | `activeProjectId` | ID? | project preselected on mobile |
 | `quotas` | object | see [Quotas](#quotas) |
+
+**Daily capacity** is the time available for planned work.
+
+- `defaultMinutes`: 240 by default, set with a slider from 60 to 600 minutes in steps of 15.
+- `weekdayOverrides`: a map from weekday (`MON` … `SUN`) to minutes. Always empty in the MVP; the UI for it comes after the MVP.
+- All code reads capacity only through one domain function, `capacityFor(settings, date)`, which returns the override for that weekday or the default. Adding per-weekday capacity later therefore changes only the settings UI, not the API, the storage or the allocation logic.
 
 ### Project
 
@@ -167,7 +173,7 @@ The user divides their attention between projects with **engagement percentages*
 
 **Algorithm** (the same principle as ADR-0008: code decides the numbers, AI chooses the content)
 
-1. **Budget per project (code).** Capacity of the day × engagement, rounded to 5 minutes with the largest-remainder method, so the budgets add up exactly to the capacity.
+1. **Budget per project (code).** `capacityFor(settings, date)` × engagement, rounded to 5 minutes with the largest-remainder method, so the budgets add up exactly to the capacity.
    - Example: 240 min at 60 / 30 / 10% gives 145, 70 and 25 minutes.
 2. **Fixed items first (code).** Items already in the plan (manual, voice, accepted suggestions) and routines due that day are subtracted from their project's budget. Items without a project are shown separately and do not use any budget.
 3. **Filling the rest (AI).** For each project with remaining budget, the model picks open work items and estimates their duration. Priorities: overdue, due soon, unfinished yesterday, open issues; purchases are grouped into one item. If a project has no open work, the model may propose a new item (for example "30 min vocabulary practice"). Each suggestion has a short reason.
@@ -178,7 +184,12 @@ The user divides their attention between projects with **engagement percentages*
 
 The top of the plan shows one quiet line per project: planned minutes against the budget, for example "Renovation 2 h 25 min of 2 h 25 min · English 40 min of 1 h 10 min · Leaves 0 of 25 min". When the plan is over capacity, the total shows "30 min over", without colour or warnings.
 
-**Post-MVP:** a weekly balance (time of completed items per project against the target shares), and recording actual durations by voice ("English took me an hour").
+**Post-MVP:**
+
+- Capacity per weekday (the data model already supports it).
+- A weekly balance: time of completed items per project against the target shares.
+- A weekly summary email with that balance (Amazon SES, sent by EventBridge Scheduler).
+- Recording actual durations by voice ("English took me an hour").
 
 ### Usage
 
@@ -187,6 +198,8 @@ Per user per day: dictation seconds, entries, AI calls. Used for quota checks; e
 ### Template
 
 Templates are code in `packages/templates` (ADR-0009), not database items. A project keeps a copy of what it needs.
+
+The template format is plain data validated by a Zod schema. This keeps two post-MVP features possible without changing the model: user-defined templates stored in the database, and templates drafted by AI from a dictation (see [VISION](VISION.md#templates)).
 
 ## Quotas
 

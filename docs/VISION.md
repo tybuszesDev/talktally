@@ -63,6 +63,7 @@ A project is created from a template. A template defines which modules the proje
 - **Software developer** (post-MVP): tasks, bugs, learning goals, metrics such as PRs merged.
 - **Sales** (post-MVP): leads and stages, calls, deals, revenue metric.
 - **Custom templates** (post-MVP): save an existing project as a template.
+- **Start a project by talking** (post-MVP): the user describes their first day of something new ("Today I started learning English, 30 minutes of vocabulary, I want to do it every day"). The app proposes a project with a template draft (metrics such as minutes studied and new words, a daily routine), and the user edits it before it is created.
 
 ## Daily plan
 
@@ -101,6 +102,8 @@ A project is created from a template. A template defines which modules the proje
 - Answering clarifications by voice.
 - Full offline-first data sync.
 - Sharing projects, teams, social login.
+- Weekly balance per project and a weekly summary email.
+- Daily capacity per weekday (the MVP has one value, set with a slider from 60 to 600 minutes).
 - Reports and long-term analytics.
 - Live (streaming) transcription.
 
