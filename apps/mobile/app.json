@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "TalkTally",
+    "slug": "talktally",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.tybu.talktally",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.tybu.talktally"
+    }
+  }
+}

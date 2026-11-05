@@ -1,0 +1,31 @@
+# EAS uploads the repository to build the mobile app.
+# When this file exists, EAS ignores .gitignore, so its rules are repeated here.
+
+# Same as .gitignore
+.DS_Store
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+.env
+.env.*
+.terraform/
+*.tfstate
+*.tfstate.*
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+*.ipa
+*.apk
+*.aab
+exports/
+
+# Not needed to build the mobile app
+apps/web/
+apps/desktop/
+services/
+infra/
+docs/
+.github/

@@ -1,0 +1,19 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+
+# One version of each shared dependency for the whole repository.
+# React must match the exact version required by the Expo SDK's React Native.
+# TypeScript stays on 6.0 until typescript-eslint supports TypeScript 7.
+catalog:
+  react: 19.3.0
+  react-dom: 19.3.0
+  '@types/react': ~19.3.0
+  '@types/react-dom': ~19.3.0
+  typescript: ~6.0.3
+  vitest: ^5.1.0
+  zod: ^4.6.0
+
+# Supply-chain protection (ADR-0017): install only versions published at least 3 days ago.
+minimumReleaseAge: 4320

@@ -1,0 +1,4 @@
+{
+  "extends": "@talktally/config/tsconfig/base.json",
+  "include": ["src"]
+}

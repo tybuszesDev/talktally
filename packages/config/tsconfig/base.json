@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Libraries and Node.js code bundled by Vite, esbuild or Metro",
+  "extends": "./strict.json",
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}
