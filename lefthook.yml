@@ -1,0 +1,29 @@
+# Git hooks (ADR-0012), installed by `pnpm install` through the root `prepare` script.
+# Formatting runs only here and in CI; editors need no format-on-save.
+
+pre-commit:
+  piped: true # Run in order and stop at the first failure.
+  jobs:
+    - name: gitleaks
+      run: gitleaks git --pre-commit --staged --redact --no-banner --verbose
+    - name: eslint
+      glob: '*.{js,mjs,cjs,jsx,ts,tsx}'
+      run: pnpm exec eslint --fix --no-warn-ignored {staged_files}
+      stage_fixed: true
+    - name: prettier
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    - name: terraform fmt
+      glob: '*.tf'
+      run: terraform fmt {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: typecheck and test affected workspaces
+      run: pnpm exec turbo run typecheck test --affected

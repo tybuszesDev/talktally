@@ -7,12 +7,21 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "lefthook install",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "lint": "turbo run lint && eslint scripts *.config.js && prettier --check .",
+    "format": "prettier --write .",
     "check:versions": "node scripts/check-single-versions.mjs"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@talktally/config": "workspace:*",
+    "eslint": "catalog:",
+    "lefthook": "^2.2.2",
+    "prettier": "catalog:",
     "turbo": "^2.11.0",
     "typescript": "catalog:"
   }
