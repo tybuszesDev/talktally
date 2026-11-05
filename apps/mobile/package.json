@@ -10,7 +10,8 @@
     "ios:large": "expo run:ios --device \"iPhone 17 Pro Max\"",
     "ios:clean": "expo prebuild --platform ios --clean",
     "build": "expo export --platform ios --output-dir dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@talktally/domain": "workspace:*",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@talktally/config": "workspace:*",
     "@types/react": "catalog:",
+    "eslint": "catalog:",
     "typescript": "catalog:"
   }
 }

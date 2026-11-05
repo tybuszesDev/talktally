@@ -1,0 +1,5 @@
+# Prettier also skips everything in .gitignore.
+# Markdown keeps its hand-written layout (no padded tables in diffs).
+*.md
+pnpm-lock.yaml
+exports/

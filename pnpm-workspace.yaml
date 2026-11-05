@@ -14,6 +14,19 @@ catalog:
   typescript: ~6.0.3
   vitest: ^5.1.0
   zod: ^4.6.0
+  eslint: ^10.13.0
+  prettier: ^3.9.0
 
 # Supply-chain protection (ADR-0017): install only versions published at least 3 days ago.
 minimumReleaseAge: 4320
+
+# Dependency install scripts run only when listed here with `true` (ADR-0017).
+# lefthook: the postinstall is not needed, the root `prepare` script installs the git hooks.
+allowBuilds:
+  lefthook: false
+
+# eslint-plugin-react-native-a11y declares `eslint` up to ^8 but works with ESLint 10
+# (checked when adding it in F-02). Remove this rule once upstream widens the peer range.
+peerDependencyRules:
+  allowedVersions:
+    eslint-plugin-react-native-a11y>eslint: '10'
