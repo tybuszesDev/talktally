@@ -30,7 +30,8 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0018](0018-change-notifications-through-the-event-bus.md) | Change notifications through the event bus | Accepted |
 | [0019](0019-feature-size-and-splitting.md) | Feature size and splitting | Accepted |
 | [0020](0020-schema-evolution-and-backward-compatibility.md) | Schema evolution and backward compatibility | Accepted |
-| [0021](0021-code-review-for-ai-written-code.md) | Code review for AI-written code | Accepted |
+| [0021](0021-code-review-for-ai-written-code.md) | Code review for AI-written code | Accepted, amended by 0022 |
+| [0022](0022-ai-assistance-commit-trailer.md) | AI assistance commit trailer | Accepted |
 
 ## Template
 

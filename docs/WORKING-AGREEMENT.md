@@ -19,7 +19,7 @@ How a piece of work moves from an idea to production, and what "ready" and "done
 
 Most code is written by Claude Code under the owner's supervision ([ADR-0021](adr/0021-code-review-for-ai-written-code.md)).
 
-1. Code is written with Claude Opus 5.5 or a more capable model. The model is named in the `Co-Authored-By` commit trailer.
+1. Code is written with Claude Opus 5.5 or a more capable model. The model is named in an `Assisted-by` commit trailer, for example `Assisted-by: Claude Opus 5.5` ([ADR-0022](adr/0022-ai-assistance-commit-trailer.md)).
 2. Every change to a code file is approved by the owner one by one in Claude Code. Automatic acceptance of edits is not used for code.
 3. Only the owner merges pull requests.
 
