@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "claude-opus-5-5",
+  "attribution": {
+    "commit": "Assisted-by: Claude Opus 5.5",
+    "pr": ""
+  },
+  "permissions": {
+    "ask": [
+      "Edit(**/*.ts)",
+      "Edit(**/*.tsx)",
+      "Edit(**/*.js)",
+      "Edit(**/*.jsx)",
+      "Edit(**/*.mjs)",
+      "Edit(**/*.cjs)",
+      "Edit(**/*.json)",
+      "Edit(**/*.yaml)",
+      "Edit(**/*.yml)",
+      "Edit(**/*.tf)",
+      "Edit(**/*.tfvars)",
+      "Edit(**/*.hcl)",
+      "Edit(**/*.graphql)",
+      "Edit(**/*.css)",
+      "Edit(**/*.html)",
+      "Edit(**/*.sh)",
+      "Edit(**/*.toml)",
+      "Edit(**/.*)"
+    ]
+  }
+}
