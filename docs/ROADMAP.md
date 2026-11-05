@@ -14,11 +14,7 @@
 
 ## Definition of done (every feature)
 
-- Tests as required by [ADR-0011](adr/0011-testing-strategy-and-quality-gates.md); coverage thresholds hold.
-- All CI checks pass ([ADR-0017](adr/0017-code-quality-security-and-cost-checks.md)).
-- Deployed to `dev` and checked there, once the dev environment exists (from M1).
-- Documentation updated; a new ADR if the feature makes or changes a decision.
-- UI changes: screenshots in the pull request, following [DESIGN.md](DESIGN.md).
+The full Definition of Ready, Definition of Done (feature and milestone) and the additional checks by area are in [WORKING-AGREEMENT.md](WORKING-AGREEMENT.md). In short: acceptance criteria met, tests and CI green, reviewed, deployed to `dev`, documented, issue closed by the merge.
 
 ## Overview
 
@@ -53,8 +49,8 @@ Things only the owner can do. Check this list before starting each feature.
 |---|---|---|
 | F-01 | `chore: scaffold pnpm and Turborepo monorepo` | Workspaces from ADR-0001 exist (empty); `pnpm install`, `lint`, `typecheck`, `test`, `build` pass; Node and pnpm versions pinned (`.node-version`, `packageManager`) |
 | F-02 | `chore: add lint, format and git hooks` | ESLint strict-type-checked, Prettier, accessibility lint, lefthook with commitlint and gitleaks; a bad commit message is rejected |
-| F-03 | `docs: add CLAUDE.md, README, license and contribution guides` | CLAUDE.md, README skeleton, LICENSE (MIT), SECURITY.md, CONTRIBUTING.md with the local workflow, `.env.example` |
-| F-04 | `ci: add pull request pipeline` | GitHub repository `talktally` created; branch protection on `main`; issue and PR templates; workflow runs lint, typecheck, test and build for affected workspaces |
+| F-03 | `docs: add CLAUDE.md, README, license and contribution guides` | CLAUDE.md, README skeleton, LICENSE (MIT), SECURITY.md, CONTRIBUTING.md with the local workflow, `.env.example`; `.claude/settings.json` requires approval of code edits |
+| F-04 | `ci: add pull request pipeline` | Branch protection on `main`; issue and PR templates with the Definition of Done checklist enforced by CI; CodeRabbit installed; workflow runs lint, typecheck, test and build for affected workspaces |
 | F-05 | `ci: add architecture, security and dependency checks` | dependency-cruiser rules, knip, CodeQL, OpenSSF Scorecard, Renovate, pnpm `minimumReleaseAge`; all are required checks |
 | F-06 | `ci: add release-please` | Release pull request with `CHANGELOG.md` appears after a `feat` commit |
 
@@ -75,10 +71,10 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 | ID | Commit | Done when |
 |---|---|---|
 | F-20 | `feat(auth): add Cognito user pool with invite-only sign-up` | User pool and two app clients in dev; self sign-up disabled; `pnpm invite <email>` creates a user |
-| F-21 | `feat(api): add AppSync API with schema codegen and me query` | DynamoDB table, AppSync API, resolver Lambda with Powertools; `me` returns settings with defaults; codegen check in CI; integration test with DynamoDB Local |
+| F-21 | `feat(api): add AppSync API with schema codegen and me query` | DynamoDB table, AppSync API, resolver Lambda with Powertools; `me` returns settings with defaults and `minimumClientVersion`; `schemaVersion` on items; codegen and schema-diff checks in CI; integration test with DynamoDB Local |
 | F-22 | `feat(client): add shared auth and GraphQL client` | `packages/client` signs in with SRP, calls `me`, caches with TanStack Query; no DOM or React Native imports (dependency-cruiser) |
 | F-23 | `feat(web): add web shell with sign-in, deployed to dev` | `packages/design-tokens`; Vite app with sign-in, sign-out and an account page; S3 + CloudFront on `dev.talktally.tybu.com`; Playwright smoke test with axe passes after deploy |
-| F-24 | `feat(mobile): add iOS app shell with sign-in` | Expo app with sign-in and an account screen; EAS development and preview builds; first TestFlight internal build installed on the owner's iPhone |
+| F-24 | `feat(mobile): add iOS app shell with sign-in` | Expo app with sign-in and an account screen; EAS development and preview builds; first TestFlight internal build installed on the owner's iPhone; "Update required" screen below `minimumClientVersion` |
 | F-25 | `feat(api): add live change notifications` | Streams → Pipes → bus → AppSync `publishChange` → `onChange` (ADR-0018); a settings change on the web appears on the phone within seconds; cross-user tests pass |
 | F-26 | `feat(observability): add tracing, dashboard, alarms and Sentry` | Correlation ID end to end; X-Ray traces; dashboard and alarms in dev; Sentry receives a test error from web and mobile |
 
