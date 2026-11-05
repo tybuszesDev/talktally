@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
+# Independent AI review of every pull request (ADR-0021). Every finding is fixed or answered
+# before merge; the main ruleset requires resolved review threads.
+language: en-US
+
+reviews:
+  profile: assertive
+  # Pull request descriptions follow the template and are checked by CI, so CodeRabbit must
+  # not edit them. The summary stays in the walkthrough comment.
+  high_level_summary: false
+  poem: false
+  suggested_reviewers: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: 'docs/adr/**'
+      instructions: >-
+        Accepted ADRs are immutable. Only the status line and links may change; a changed
+        decision needs a new ADR that supersedes or amends the old one.
+    - path: '.github/workflows/**'
+      instructions: >-
+        Third-party actions must be pinned by full commit SHA with the version in a comment.
+        Permissions are least privilege. Untrusted input (titles, bodies, branch names) reaches
+        scripts only through environment variables, never through inline expressions.
+    - path: 'packages/domain/**'
+      instructions: >-
+        Platform-neutral code: no DOM, React Native or AWS SDK imports. Pure functions with unit
+        tests; coverage threshold 90% of lines.
+    - path: '**/*.test.*'
+      instructions: >-
+        Tests follow Arrange-Act-Assert, describe behaviour in their names and never call real
+        AWS services or Bedrock.
+  tools:
+    # ESLint and Prettier already run with the repository configuration in CI.
+    eslint:
+      enabled: false
+    # Markdown is written by hand and is not formatted (see .prettierignore).
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - CLAUDE.md
+      - docs/WORKING-AGREEMENT.md

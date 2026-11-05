@@ -92,4 +92,4 @@ Apply each row whose area the change touches.
 
 ## Pull request checklist
 
-The pull request template created in F-04 mirrors the feature Definition of Done, contains the two manual-test checkboxes, and lists the area checks as optional items. A CI check reads the pull request description and fails while a required box is unticked.
+The [pull request template](../.github/pull_request_template.md) mirrors the feature Definition of Done, contains the two manual-test checkboxes, and lists the area checks as optional items. The `PR checklist` check ([scripts/check-pr-checklist.mjs](../scripts/check-pr-checklist.mjs)) reads the pull request description and fails while a Definition of Done box is unticked, while not exactly one manual-test box is ticked, or when `Closes #<issue>` is missing. Until the `dev` environment exists (M1), "manually tested" means tested locally. Items that can only be true after the merge (deployed to `dev`, issue closed, card in Done) are not in the template.

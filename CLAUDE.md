@@ -48,7 +48,7 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 3. **Branch:** `<type>/<issue>-<short-description>`, for example `feat/12-entry-upload`. Never commit to `main`.
 4. **Board:** move the card to In progress when the branch exists and to In review when the pull request is open (`gh project item-edit`, project 1, field Status).
 5. **Commits:** Conventional Commits, enforced by commitlint. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `build`, `perf`. Scope is optional and must be a workspace folder name or `infra`. Every commit ends with the trailer `Assisted-by: Claude Opus 5.5` (the model actually used); never `Co-Authored-By` (ADR-0022).
-6. **Pull request:** title = the planned commit title from the issue (it becomes the squash commit). The body starts with `Closes #<issue>`, then summary, checks run locally and a manual test section for the owner. No "Generated with Claude Code" footer.
+6. **Pull request:** title = the planned commit title from the issue (it becomes the squash commit). The body follows `.github/pull_request_template.md`: `Closes #<issue>`, summary, checks run locally, the Definition of Done boxes (tick only what is true), exactly one manual-test box, and the area checks that apply. Required checks: `CI`, `PR title`, `PR checklist`; CodeRabbit threads must be resolved. No "Generated with Claude Code" footer.
 7. **Only the owner merges** (squash merge in the GitHub web UI). Review comments arrive as pull request comments: read them with `gh` and push fixes to the same branch.
 8. **Edits to code files need the owner's approval one by one** (`.claude/settings.json` asks for every code and config file, in every permission mode). Do not try to work around it.
 
