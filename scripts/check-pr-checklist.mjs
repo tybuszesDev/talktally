@@ -27,8 +27,10 @@ export function visibleText(markdown) {
   for (const line of lines) {
     const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
     if (fence) {
-      // A fence closes with the same character, at least as long as the opening one.
-      if (marker?.[0] === fence[0] && marker.length >= fence.length) fence = undefined;
+      // CommonMark: a closing fence uses the same character, is at least as long as the opening
+      // one, and has only spaces or tabs after it.
+      const closing = /^ {0,3}(`{3,}|~{3,})[ \t]*$/.exec(line)?.[1];
+      if (closing?.[0] === fence[0] && closing.length >= fence.length) fence = undefined;
     } else if (marker) {
       fence = marker;
     } else {

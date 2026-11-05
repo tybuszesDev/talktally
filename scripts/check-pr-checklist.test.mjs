@@ -180,6 +180,14 @@ describe('parseChecklists', () => {
     assert.deepEqual(sections.get('Manual test'), [{ checked: false, text: 'visible' }]);
   });
 
+  it('keeps a fence open when the closing line has text after the marker', () => {
+    const markdown = '## Manual test\n```\n```not-a-close\n- [x] code\n```  \n- [ ] visible\n';
+
+    const sections = parseChecklists(markdown);
+
+    assert.deepEqual(sections.get('Manual test'), [{ checked: false, text: 'visible' }]);
+  });
+
   it('reads an uppercase X and Windows line endings', () => {
     const markdown = '## Definition of Done\r\n- [X] done\r\n* [ ] open\r\n';
 
