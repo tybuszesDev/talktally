@@ -47,8 +47,8 @@ Things only the owner can do. Check this list before starting each feature.
 
 | ID | Commit | Done when |
 |---|---|---|
-| F-01 | `chore: scaffold pnpm and Turborepo monorepo` | Workspaces from ADR-0001 exist (empty); `pnpm install`, `lint`, `typecheck`, `test`, `build` pass; Node and pnpm versions pinned (`.node-version`, `packageManager`) |
-| F-02 | `chore: add lint, format and git hooks` | ESLint strict-type-checked, Prettier, accessibility lint, lefthook with commitlint and gitleaks; a bad commit message is rejected |
+| F-01 | `chore: scaffold pnpm and Turborepo monorepo` | First workspaces (config, domain, web, mobile); pnpm catalog with one React and TypeScript version, checked by `pnpm check:versions`; Vite build and Metro iOS bundle both import `@talktally/domain`; `.easignore`; Node and pnpm pinned |
+| F-02 | `chore: add lint, format and git hooks` | Prettier enforces the style; ESLint strict-type-checked with accessibility lint; lefthook formats and lints staged files, runs commitlint and gitleaks; formatting only in the hook and CI |
 | F-03 | `docs: add CLAUDE.md, README, license and contribution guides` | CLAUDE.md, README skeleton, LICENSE (MIT), SECURITY.md, CONTRIBUTING.md with the local workflow, `.env.example`; `.claude/settings.json` requires approval of code edits |
 | F-04 | `ci: add pull request pipeline` | Branch protection on `main`; issue and PR templates with the Definition of Done checklist enforced by CI; CodeRabbit installed; workflow runs lint, typecheck, test and build for affected workspaces |
 | F-05 | `ci: add architecture, security and dependency checks` | dependency-cruiser rules, knip, CodeQL, OpenSSF Scorecard, Renovate, pnpm `minimumReleaseAge`; all are required checks |

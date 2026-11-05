@@ -1,0 +1,27 @@
+{
+  "name": "@talktally/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "ios": "expo run:ios --device \"iPhone 17\"",
+    "ios:small": "expo run:ios --device \"iPhone 16e\"",
+    "ios:large": "expo run:ios --device \"iPhone 17 Pro Max\"",
+    "ios:clean": "expo prebuild --platform ios --clean",
+    "build": "expo export --platform ios --output-dir dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@talktally/domain": "workspace:*",
+    "expo": "~58.0.0",
+    "expo-dev-client": "~58.0.0",
+    "react": "catalog:",
+    "react-native": "0.88.1"
+  },
+  "devDependencies": {
+    "@talktally/config": "workspace:*",
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

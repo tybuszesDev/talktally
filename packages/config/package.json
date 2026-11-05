@@ -1,0 +1,12 @@
+{
+  "name": "@talktally/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/strict.json": "./tsconfig/strict.json",
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/react.json": "./tsconfig/react.json",
+    "./vitest": "./vitest/base.js"
+  }
+}

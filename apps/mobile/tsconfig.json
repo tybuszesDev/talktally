@@ -1,0 +1,4 @@
+{
+  "extends": ["expo/tsconfig.base", "@talktally/config/tsconfig/strict.json"],
+  "include": ["index.ts", "src"]
+}
