@@ -14,8 +14,8 @@ Instructions for Claude Code in this repository. Work status lives on the [proje
 
 ## Sources and sessions (ADR-0024)
 
-- **Documentation first.** To learn how something works, use in this order: (1) this repository (`docs/`, ADRs, existing code); (2) the official documentation of the tool for the version we use (check `package.json`, the lockfile or the workflow pin); (3) the tool's code and types in `node_modules`. Use other sources only when these do not answer, and say so. Never write an API or configuration option from memory; link the documentation page in the pull request.
-- **One session per feature.** A feature starts in a new session after the previous pull request is merged. Before the session ends: follow-ups filed as issues, local facts in memory, branch pushed. After a context compression mid-feature, re-read the issue and `git diff origin/main` before continuing.
+- **Documentation first.** To learn how something works, use in this order: (1) this repository (`docs/`, ADRs, existing code); (2) the official documentation of the tool for the version we use (check `package.json`, the lockfile or the workflow pin), through the Context7 MCP server or, when Context7 lacks the library or version, the documentation site; (3) the tool's code and types in `node_modules`. Use other sources only when these do not answer, and say so. Never write an API or configuration option from memory; link the documentation page in the pull request.
+- **One session per feature.** A feature starts in a new session after the previous pull request is merged. Before the session ends: follow-ups filed as issues, local facts in memory, branch pushed. After a context compression mid-feature, re-read the issue, `git status --short` (untracked files) and `git diff origin/main` before continuing.
 
 ## Repository map
 

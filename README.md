@@ -45,7 +45,7 @@ This is a portfolio project built by one developer with an AI coding assistant:
 - Most code is written by [Claude Code](https://claude.com/claude-code) (Claude Opus 5.5 or a more capable model) under the owner's supervision.
 - Every change to a code file is approved by the owner one by one; automatic acceptance of edits is not used for code.
 - Each commit names the model in an `Assisted-by` trailer ([ADR-0022](docs/adr/0022-ai-assistance-commit-trailer.md)).
-- The assistant works from the official documentation of the tool versions in use, not from memory, and each feature starts in a fresh session ([ADR-0024](docs/adr/0024-documentation-first-and-session-per-feature.md)).
+- The assistant works from the official documentation of the tool versions in use, not from memory: version-specific library docs come from [Context7](https://context7.com) through its MCP server, with the documentation sites as the fallback. Each feature starts in a fresh session ([ADR-0024](docs/adr/0024-documentation-first-and-session-per-feature.md)).
 - Planning came first: vision, ADRs, domain model and roadmap were written and accepted before any code.
 
 ## Code review

@@ -15,21 +15,22 @@ A long conversation has a second cost. When the context fills up, older parts ar
 **Order of sources.** When Claude needs to know how something works, it uses, in this order:
 
 1. This repository: `docs/`, the ADRs, CLAUDE.md and the existing code.
-2. The official documentation of the tool, for the version the repository uses (from `package.json`, the lockfile or the workflow pin).
+2. The official documentation of the tool, for the version the repository uses (from `package.json`, the lockfile or the workflow pin). Claude reads it through the **Context7** MCP server, which serves version-specific library documentation, and falls back to the tool's documentation site when Context7 does not have the library or the version.
 3. The tool's own code and type definitions in `node_modules`.
 
 Other sources (blog posts, forums, general web search) are used only when these do not answer the question, and Claude says so. APIs and configuration options are not written from memory; when a change relies on a tool's documentation, the pull request links the page.
 
-**One session per feature.** Each feature starts in a new Claude Code session with an empty context, after the previous pull request is merged. Before a session ends, follow-up work is filed as issues, local facts go to Claude's memory, and the branch is pushed. If the context is compressed in the middle of a feature, Claude re-reads the issue and the branch diff (`git diff origin/main`) before continuing.
+**One session per feature.** Each feature starts in a new Claude Code session with an empty context, after the previous pull request is merged. Before a session ends, follow-up work is filed as issues, local facts go to Claude's memory, and the branch is pushed. If the context is compressed in the middle of a feature, Claude re-reads the issue, the working tree state including untracked files (`git status --short`) and the branch diff (`git diff origin/main`) before continuing.
 
 ## Consequences
 
 - Code matches the versions actually installed, and reviewers can check the linked documentation.
 - Looking things up takes longer than writing from memory.
+- Context7 is a Claude Code plugin in the owner's user settings, authorized once with the owner's Context7 account; it is not part of the repository, so other contributors use the documentation sites.
 - Each session starts by reading CLAUDE.md, the issue and the relevant docs, so state that lives only in a conversation is lost; the repository, the board and the memory must stay complete.
 
 ## Alternatives considered
 
 - **Technical restriction of web access** (WebFetch allowed only for documentation domains, WebSearch always asking): stronger, but adds permission prompts; the owner chose a written rule.
-- **Version-specific documentation through an MCP server only (Context7):** useful, but needs a separate authorization and does not cover every tool.
+- **Context7 as the only source of documentation:** it does not cover every tool and version, so the documentation sites stay the fallback.
 - **Reset only when mistakes appear:** mistakes from a degraded context are hard to notice in time.
