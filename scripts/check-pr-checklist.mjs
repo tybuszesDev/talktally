@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 
 const DONE_SECTION = 'Definition of Done';
 const MANUAL_TEST_SECTION = 'Manual test';
+const HEADING = /^##\s+(.+?)\s*$/;
 const CHECKBOX = /^\s*[-*]\s+\[([ xX])\]\s+(.*)$/;
 const ISSUE_LINK = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+/i;
 
@@ -41,7 +42,8 @@ export function visibleText(markdown) {
 }
 
 /**
- * Collects the checkboxes under each level-2 heading of the visible text.
+ * Collects the checkboxes under each level-2 heading of the visible text. A repeated heading
+ * replaces the earlier section; checkPullRequestBody rejects repeated required sections.
  * @param {string} markdown
  * @returns {Map<string, { checked: boolean, text: string }[]>}
  */
@@ -49,7 +51,7 @@ export function parseChecklists(markdown) {
   const sections = new Map();
   let current;
   for (const line of visibleText(markdown).split('\n')) {
-    const heading = /^##\s+(.+?)\s*$/.exec(line);
+    const heading = HEADING.exec(line);
     if (heading) {
       current = heading[1];
       sections.set(current, []);
@@ -94,6 +96,15 @@ export function checkPullRequestBody(body, template) {
 
   if (!ISSUE_LINK.test(visibleText(body))) {
     problems.push('Link the issue with "Closes #<number>".');
+  }
+
+  const headings = visibleText(body)
+    .split('\n')
+    .map((line) => HEADING.exec(line)?.[1]);
+  for (const name of [DONE_SECTION, MANUAL_TEST_SECTION]) {
+    if (headings.filter((heading) => heading === name).length > 1) {
+      problems.push(`The "${name}" section must not be repeated.`);
+    }
   }
 
   const done = sections.get(DONE_SECTION);

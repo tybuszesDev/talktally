@@ -105,6 +105,15 @@ describe('checkPullRequestBody', () => {
     ]);
   });
 
+  it('rejects a repeated required section', () => {
+    const manualSection = completeBody().match(/## Manual test[\s\S]*?(?=## Area checks)/)[0];
+    const body = `${completeBody({ manual: [true, true] })}\n${manualSection}`;
+
+    const problems = check(body);
+
+    assert.deepEqual(problems, ['The "Manual test" section must not be repeated.']);
+  });
+
   it('does not require the optional area checks', () => {
     const body = completeBody();
 
