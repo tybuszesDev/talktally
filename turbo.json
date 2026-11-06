@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [".node-version"],
+  "globalEnv": ["NODE_VERSION"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
