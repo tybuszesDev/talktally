@@ -13,6 +13,15 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+  # CodeRabbit reviews but never writes code: edits are approved one by one and commits carry
+  # the Assisted-by trailer (ADR-0021, ADR-0022).
+  finishing_touches:
+    autofix:
+      enabled: false
+    unit_tests:
+      enabled: false
+    docstrings:
+      enabled: false
   path_instructions:
     - path: 'docs/adr/**'
       instructions: >-
