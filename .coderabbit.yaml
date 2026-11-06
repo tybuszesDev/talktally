@@ -2,9 +2,12 @@
 # Independent AI review of every pull request (ADR-0021). Every finding is fixed or answered
 # before merge; the main ruleset requires resolved review threads.
 language: en-US
+tone_instructions: >-
+  Report only real problems: bugs, security, data loss, broken CI, violated ADRs or project
+  rules. Skip style, wording, Markdown edge cases and deliberate misuse by the author.
 
 reviews:
-  profile: assertive
+  profile: chill
   # Pull request descriptions follow the template and are checked by CI, so CodeRabbit must
   # not edit them. The summary stays in the walkthrough comment.
   high_level_summary: false
@@ -21,6 +24,10 @@ reviews:
     unit_tests:
       enabled: false
     docstrings:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
       enabled: false
   path_instructions:
     - path: 'docs/adr/**'
