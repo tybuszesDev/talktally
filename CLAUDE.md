@@ -115,6 +115,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0022](docs/adr/0022-ai-assistance-commit-trailer.md) | Commits name the model with `Assisted-by: <model>`, not `Co-Authored-By`; AI use is stated in the README. |
 | [0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md) | CodeRabbit reviews once when a pull request is opened, again after fixes for Critical or Major findings; "Fix comments" triggered only by the owner per finding; other code-writing finishing touches off; no automatic merges. |
 | [0024](docs/adr/0024-documentation-first-and-session-per-feature.md) | Sources in order: repository, official docs for the version in use, package code; nothing from memory; one Claude Code session per feature. |
+| [0025](docs/adr/0025-release-please-with-a-github-app-token.md) | release-please runs with a GitHub App token kept in the `release` environment (main only); tags `vX.Y.Z`, title `chore: release X.Y.Z`, first release `0.1.0`. |
 
 ## Owner actions
 
