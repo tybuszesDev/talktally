@@ -65,8 +65,10 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
 - The description follows the [pull request template](.github/pull_request_template.md): `Closes #<issue>`, summary, checks run, the Definition of Done checklist, exactly one manual-test box, and the area checks that apply ([docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md)).
 - Required checks on `main` (ruleset in [.github/rulesets/main.json](.github/rulesets/main.json)):
   - **CI:** lint, typecheck, test and build of the affected workspaces, root files and formatting, import rules (dependency-cruiser) and unused code (knip);
+  - **Secret scan:** gitleaks on the commits of the pull request;
   - **PR title:** commitlint on the title;
-  - **PR checklist:** fails while a Definition of Done box is unticked or not exactly one manual-test box is ticked.
+  - **PR checklist:** fails while a Definition of Done box is unticked or not exactly one manual-test box is ticked;
+  - **CodeQL results** (code scanning merge protection, not a status check): the analysis must have run, and new high or critical security alerts or error-level alerts block the merge. Alerts are in the [Security tab](https://github.com/tybuszesDev/talktally/security/code-scanning).
 - CodeRabbit reviews each pull request when it is opened, and again after fixes for Critical or Major findings; every review thread must be resolved before merge. Review rules, CodeRabbit fixes and commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
 - `main` accepts only squash merges of pull requests that are up to date with it; force pushes and deletion are blocked, also for the owner.
 - Only the owner merges.
@@ -77,3 +79,14 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
 - New package versions are installed only after they are 3 days old (`minimumReleaseAge`).
 - Dependency install scripts run only when approved in `allowBuilds`.
 - A new dependency needs a reason, the alternatives considered, and a license compatible with MIT.
+
+### Updates with Renovate
+
+The [Mend Renovate app](https://github.com/apps/renovate) opens the update pull requests; the configuration is [renovate.json](renovate.json).
+
+- **Schedule:** Monday mornings (before 08:00, Europe/Warsaw), only for versions at least 3 days old. Security updates come right away.
+- **Groups:** one pull request each for minor and patch updates of `web`, `mobile`, `tooling` (root, `packages/*`, the pnpm catalog, Node.js) and GitHub Actions (pinned by digest); a weekly lock file maintenance; every major update on its own.
+- **Expo SDK:** `expo`, `expo-*`, `react`, `react-dom`, `react-native` and their types wait for approval in the Dependency Dashboard issue, because the SDK decides their versions. Upgrade them with `expo install --fix`.
+- **TypeScript** stays below 7 until typescript-eslint supports it.
+- Titles are `chore: update ...` without a scope. The `PR checklist` check skips bot pull requests; the other checks and CodeRabbit run as usual.
+- A "Configure Renovate" onboarding pull request is not needed: close it without merging.

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Dependency updates through the Mend Renovate app (ADR-0012, ADR-0017). Weekly pull requests grouped by area; majors and Expo SDK packages separately.",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigestsToSemver",
+    ":semanticCommits",
+    ":semanticCommitScopeDisabled"
+  ],
+  "timezone": "Europe/Warsaw",
+  "schedule": ["* 0-7 * * 1"],
+  "minimumReleaseAge": "3 days",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["* 0-7 * * 1"]
+  },
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "scripts/fixtures/**"
+  ],
+  "packageRules": [
+    {
+      "description": "Every update is a chore without a scope: commitlint allows only workspace folder names as scopes, and dependency updates do not go into the release notes. Overrides the fix type that config:recommended gives to dependencies.",
+      "matchPackageNames": ["*"],
+      "semanticCommitType": "chore"
+    },
+    {
+      "description": "Web app: one weekly pull request for minor and patch updates.",
+      "matchFileNames": ["apps/web/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "web dependencies"
+    },
+    {
+      "description": "Mobile app: one weekly pull request for minor and patch updates (Expo SDK packages are handled below).",
+      "matchFileNames": ["apps/mobile/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "mobile dependencies"
+    },
+    {
+      "description": "Tooling: root package.json (including packageManager), shared config and domain packages, the pnpm catalog and the Node.js version.",
+      "matchFileNames": ["package.json", "packages/**", "pnpm-workspace.yaml", ".node-version"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "tooling"
+    },
+    {
+      "description": "GitHub Actions and container images in workflows, pinned by digest with the version in a comment.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "The Expo SDK decides these versions; React must match the exact version its React Native requires. Upgrade them together with `expo install --fix` after approving them in the Dependency Dashboard.",
+      "matchPackageNames": [
+        "expo",
+        "expo-*",
+        "@expo/*",
+        "react",
+        "react-dom",
+        "react-native",
+        "react-native-*",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "groupName": "Expo SDK",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "TypeScript stays on 6.x until typescript-eslint supports TypeScript 7.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    }
+  ]
+}

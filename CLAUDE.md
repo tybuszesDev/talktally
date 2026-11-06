@@ -74,6 +74,7 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 
 - Shared versions live in the pnpm `catalog` in `pnpm-workspace.yaml`; workspaces reference them with `catalog:`.
 - Use caret or tilde ranges, never exact pins of fresh releases. `minimumReleaseAge` (3 days) blocks new versions: never bypass it and never add `minimumReleaseAgeExclude`.
+- Routine updates come from Renovate ([renovate.json](renovate.json)): weekly pull requests grouped by area, the same 3-day release age. Expo SDK packages and React wait for approval in the Dependency Dashboard and are upgraded with `expo install --fix`.
 - pnpm fails on dependency build scripts nobody decided on: record each decision in `allowBuilds` (`pnpm approve-builds '!pkg'` denies).
 - `react` is pinned to the exact version the Expo SDK's React Native requires. TypeScript stays on `~6.0` until typescript-eslint supports TypeScript 7.
 - A new dependency needs a reason and the alternatives considered in the pull request, and a license compatible with MIT.
