@@ -1,0 +1,46 @@
+# Release pull requests and GitHub Releases with release-please (ADR-0016, ADR-0025).
+# Every push to main updates the release pull request (next version and CHANGELOG.md);
+# merging it creates the tag vX.Y.Z and the GitHub Release. Configuration lives in
+# release-please-config.json and .release-please-manifest.json.
+#
+# release-please runs with a GitHub App installation token, not GITHUB_TOKEN: pull requests
+# and tags created with GITHUB_TOKEN do not start the required checks or later workflows.
+# The App's client ID and private key belong to the `release` environment, which only the
+# main branch may use. Setup: CONTRIBUTING.md, "Releases".
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Both actions use the App token; the job needs no GITHUB_TOKEN permissions.
+permissions: {}
+
+# Runs one after another, so two pushes never update the release pull request at once.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release please
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: release
+      deployment: false # Only for the environment's variable and secret; no deployment record.
+    steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # The token gets only what release-please needs: the release branch, commits, tags and
+          # releases (contents), the release pull request (pull-requests) and its labels (issues).
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
