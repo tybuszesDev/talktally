@@ -34,8 +34,9 @@ TalkTally proposes: tile adhesive −4 bags, tiles laid +3 m², "Fix plumbing le
 | [Design](docs/DESIGN.md) | UI principles, tokens, accessibility |
 | [Security model](docs/SECURITY-MODEL.md) | Assets, threats and mitigations, privacy |
 | [Roadmap](docs/ROADMAP.md) | Milestones and features |
-| [Working agreement](docs/WORKING-AGREEMENT.md) | Definition of Ready and Done, review rules |
-| [Architecture decisions](docs/adr/README.md) | 22 ADRs |
+| [Working agreement](docs/WORKING-AGREEMENT.md) | Definition of Ready and Done, checks by area |
+| [Code review](docs/CODE-REVIEW.md) | Review layers, CodeRabbit rules, merging |
+| [Architecture decisions](docs/adr/README.md) | 23 ADRs |
 
 ## How this project is built
 
@@ -44,8 +45,17 @@ This is a portfolio project built by one developer with an AI coding assistant:
 - Most code is written by [Claude Code](https://claude.com/claude-code) (Claude Opus 5.5 or a more capable model) under the owner's supervision.
 - Every change to a code file is approved by the owner one by one; automatic acceptance of edits is not used for code.
 - Each commit names the model in an `Assisted-by` trailer ([ADR-0022](docs/adr/0022-ai-assistance-commit-trailer.md)).
-- Every pull request is reviewed in three layers: CI tools, an independent AI reviewer from another vendor, and the owner, who is the only one who merges ([ADR-0021](docs/adr/0021-code-review-for-ai-written-code.md)).
 - Planning came first: vision, ADRs, domain model and roadmap were written and accepted before any code.
+
+## Code review
+
+Because most code is written by an AI assistant, every pull request is reviewed in three layers ([ADR-0021](docs/adr/0021-code-review-for-ai-written-code.md)):
+
+1. **CI tools:** lint, typecheck, tests and build, a Conventional Commit title, and a description that follows the Definition of Done template.
+2. **[CodeRabbit](https://coderabbit.ai)**, an independent AI reviewer from another vendor. It reviews each pull request when it is opened, and again after fixes for critical or major findings, and is tuned to report real problems only. Every finding is fixed or answered, and open review threads block the merge. The owner can let CodeRabbit fix a small finding itself; it never merges and its other code-writing features are off ([ADR-0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md)).
+3. **The owner** reads the full diff and is the only one who merges.
+
+Details, including how findings are handled and the CodeRabbit commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
 
 ## Getting started
 

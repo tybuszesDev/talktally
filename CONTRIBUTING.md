@@ -60,8 +60,13 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
 ## Pull requests
 
 - The title is the Conventional Commit that lands on `main` (pull requests are squash-merged), written for release notes.
-- The description starts with `Closes #<issue>` and lists what changed, the checks run and the manual test.
-- A pull request is ready when it meets the Definition of Done in [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md), including the checks for the areas it touches.
+- The description follows the [pull request template](.github/pull_request_template.md): `Closes #<issue>`, summary, checks run, the Definition of Done checklist, exactly one manual-test box, and the area checks that apply ([docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md)).
+- Required checks on `main` (ruleset in [.github/rulesets/main.json](.github/rulesets/main.json)):
+  - **CI:** lint, typecheck, test and build of the affected workspaces, root files and formatting;
+  - **PR title:** commitlint on the title;
+  - **PR checklist:** fails while a Definition of Done box is unticked or not exactly one manual-test box is ticked.
+- CodeRabbit reviews each pull request when it is opened, and again after fixes for Critical or Major findings; every review thread must be resolved before merge. Review rules, CodeRabbit fixes and commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
+- `main` accepts only squash merges of pull requests that are up to date with it; force pushes and deletion are blocked, also for the owner.
 - Only the owner merges.
 
 ## Dependencies

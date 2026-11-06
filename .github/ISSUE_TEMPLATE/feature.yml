@@ -1,0 +1,36 @@
+name: Feature
+description: A roadmap feature or a new piece of user-visible behaviour
+labels: ['type: feature']
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: User story, for example "As the owner, I ..., so that ...".
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Planned commit
+      description: The Conventional Commit title that will land on main.
+      placeholder: 'feat(web): ...'
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete and testable, one checkbox each.
+      placeholder: |
+        - [ ] A testable outcome
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Test notes, dependencies and owner actions
+      description: How to test it, features it depends on, and anything only the owner can do (docs/ROADMAP.md#owner-actions).
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Related ADRs and documents.

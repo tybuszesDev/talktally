@@ -10,7 +10,8 @@
     "prepare": "lefthook install",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "test": "turbo run test && pnpm test:scripts",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "lint": "turbo run lint && eslint scripts *.config.js && prettier --check .",
     "format": "prettier --write .",
     "check:versions": "node scripts/check-single-versions.mjs"

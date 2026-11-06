@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work as described
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Security problems are reported privately, see SECURITY.md. Never paste tokens, passwords or personal data here.
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Web app
+        - Mobile app
+        - Backend or pipeline
+        - Repository or tooling
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: App version, build number or commit SHA, if known.
