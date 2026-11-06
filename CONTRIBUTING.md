@@ -87,6 +87,7 @@ The [Mend Renovate app](https://github.com/apps/renovate) opens the update pull 
 - **Schedule:** Monday mornings (before 08:00, Europe/Warsaw), only for versions at least 3 days old. Security updates come right away.
 - **Groups:** one pull request each for minor and patch updates of `web`, `mobile`, `tooling` (root, `packages/*`, the pnpm catalog, Node.js) and GitHub Actions (pinned by digest); a weekly lock file maintenance; every major update on its own.
 - **Expo SDK:** `expo`, `expo-*`, `react`, `react-dom`, `react-native` and their types wait for approval in the Dependency Dashboard issue, because the SDK decides their versions. Upgrade them with `expo install --fix`.
+- **gitleaks image:** GHCR gives no release dates, so Renovate cannot check its age. The update waits for approval in the Dependency Dashboard; approve it once the [gitleaks release](https://github.com/gitleaks/gitleaks/releases) is at least 3 days old, then run `brew upgrade gitleaks` for the pre-commit hook.
 - **TypeScript** stays below 7 until typescript-eslint supports it.
 - Titles are `chore: update ...` without a scope. The `PR checklist` check skips bot pull requests; the other checks and CodeRabbit run as usual.
 - A "Configure Renovate" onboarding pull request is not needed: close it without merging.

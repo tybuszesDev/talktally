@@ -56,6 +56,17 @@
       "groupName": "GitHub Actions"
     },
     {
+      "description": "GHCR gives no release timestamps, so Renovate cannot apply the 3-day release age to the gitleaks image and would hold its updates forever. Instead the update waits for approval in the Dependency Dashboard: approve it once the gitleaks release is at least 3 days old.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/gitleaks/gitleaks"],
+      "groupName": "gitleaks image",
+      "dependencyDashboardApproval": true,
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "prBodyNotes": [
+        "Approved by hand because GHCR has no release dates: the [gitleaks release](https://github.com/gitleaks/gitleaks/releases) must be at least 3 days old. After the merge, update the local pre-commit gitleaks (`brew upgrade gitleaks`)."
+      ]
+    },
+    {
       "description": "The Expo SDK decides these versions; React must match the exact version its React Native requires. Upgrade them together with `expo install --fix` after approving them in the Dependency Dashboard.",
       "matchPackageNames": [
         "expo",
