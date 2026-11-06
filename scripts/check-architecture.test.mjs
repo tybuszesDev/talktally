@@ -2,6 +2,7 @@
 // small repository-shaped trees in scripts/fixtures/architecture/.
 
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 
@@ -34,6 +35,27 @@ async function cruiseFixture(fixture) {
 }
 
 const ruleNames = config.forbidden?.map((rule) => rule.name).sort() ?? [];
+
+const repositoryRoot = new URL('../', import.meta.url);
+
+describe('pnpm check:architecture', () => {
+  it('scans every workspace folder that exists', () => {
+    const workspaceFile = readFileSync(new URL('pnpm-workspace.yaml', repositoryRoot), 'utf8');
+    const folders = [...workspaceFile.matchAll(/^\s+-\s+([\w-]+)\/\*\s*$/gm)].map(
+      (match) => match[1],
+    );
+    /** @type {{ scripts: Record<string, string> }} */
+    const manifest = JSON.parse(readFileSync(new URL('package.json', repositoryRoot), 'utf8'));
+    const scanned = manifest.scripts['check:architecture']?.split(/\s+/) ?? [];
+
+    const missing = folders.filter(
+      (folder) => existsSync(new URL(`${folder}/`, repositoryRoot)) && !scanned.includes(folder),
+    );
+
+    assert.ok(folders.length > 0, 'no workspace folders found in pnpm-workspace.yaml');
+    assert.deepEqual(missing, [], 'add these folders to the check:architecture script');
+  });
+});
 
 describe('architecture rules', () => {
   it('accept code that follows them', async () => {
