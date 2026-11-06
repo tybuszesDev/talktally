@@ -33,6 +33,8 @@ pnpm typecheck
 pnpm test
 pnpm build                       # Vite web build and Metro iOS bundle
 pnpm check:versions              # fails if react, react-dom or typescript resolve to two versions
+pnpm check:architecture          # dependency-cruiser: ADR-0001 import rules, cycles, undeclared deps
+pnpm check:unused                # knip: unused files, exports, dependencies and catalog entries
 pnpm --filter @talktally/web dev # http://localhost:5173
 pnpm --filter @talktally/mobile ios        # build and run on the iPhone 17 simulator
 pnpm --filter @talktally/mobile ios:small  # iPhone 16e; ios:large = iPhone 17 Pro Max
@@ -58,7 +60,8 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 - **Prettier runs only in the pre-commit hook and in CI.** Never add format-on-save settings or Claude Code formatting hooks. Markdown is not formatted by Prettier.
 - Tests ship in the same pull request as the code (ADR-0011). A bug fix starts with a failing test. Unit tests never call real AWS services or Bedrock.
 - No `TODO` without an issue number. Follow-up work becomes a new issue.
-- Packages never import from apps or services. `packages/domain` stays platform-neutral.
+- Packages never import from apps or services. `packages/domain` stays platform-neutral. dependency-cruiser enforces this in CI; a new rule gets a violation fixture in `scripts/fixtures/architecture/`, so `scripts/check-architecture.test.mjs` proves it fires.
+- Exceptions in `knip.config.js` carry a comment saying why the finding is not real.
 - UI: every interactive element has a `testID` and an accessibility label; strings live in components or constant modules, not in business logic.
 - Logs never contain transcripts, audio URLs, tokens or other user content (ADR-0015).
 
@@ -111,4 +114,4 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 Some features need something only the owner can do (accounts, DNS, recordings). The list is in [docs/ROADMAP.md](docs/ROADMAP.md#owner-actions).
 
 - Check it before starting each feature. If the feature needs an action that is not done, say so and stop.
-- Remind the owner early about upcoming actions, especially the long-running ones: real renovation dictations (3 before F-14, 20+ before F-45), the Apple Developer Program before F-24, Terraform, AWS CLI and an IAM Identity Center admin user before F-10.
+- Remind the owner early about upcoming actions, especially the long-running ones: the Mend Renovate app before F-05b, real renovation dictations (3 before F-14, 20+ before F-45), the Apple Developer Program before F-24, Terraform, AWS CLI and an IAM Identity Center admin user before F-10.

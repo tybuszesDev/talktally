@@ -56,5 +56,12 @@ jobs:
       - name: Lint root files and check formatting
         run: pnpm exec eslint scripts '*.config.js' && pnpm exec prettier --check .
 
+      # Whole-repository checks (ADR-0017): import rules from ADR-0001, then unused code.
+      - name: Check architecture
+        run: pnpm check:architecture
+
+      - name: Check unused code
+        run: pnpm check:unused
+
       - name: Test repository scripts
         run: pnpm test:scripts

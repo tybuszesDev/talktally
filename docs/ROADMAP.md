@@ -35,6 +35,7 @@ Things only the owner can do. Check this list before starting each feature.
 
 | Needed before | Action |
 |---|---|
+| F-05b | Install the Mend Renovate GitHub App on `tybuszesDev/talktally` only (not on all repositories) |
 | F-10 | Install Terraform and the AWS CLI. Create an administrator user in IAM Identity Center with MFA, so the root account is never used for daily work |
 | F-12 | Add the four NS records for `talktally.tybu.com` in the Hostinger DNS zone editor |
 | F-14 | Record 3 real renovation dictations (1–3 minutes each). Enable Bedrock model access for Anthropic models |

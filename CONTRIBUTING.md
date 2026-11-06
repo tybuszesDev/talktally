@@ -34,6 +34,8 @@ pnpm install   # installs dependencies and the git hooks
 | `pnpm typecheck` | TypeScript in every workspace |
 | `pnpm test` | Unit tests |
 | `pnpm build` | Web build and iOS bundle |
+| `pnpm check:architecture` | Import rules from ADR-0001 with dependency-cruiser ([dependency-cruiser.config.js](dependency-cruiser.config.js)) |
+| `pnpm check:unused` | Unused files, exports and dependencies with knip ([knip.config.js](knip.config.js)) |
 | `pnpm --filter @talktally/web dev` | Web app at http://localhost:5173 |
 | `pnpm --filter @talktally/mobile ios` | Builds the development client and runs it on the iPhone 17 simulator (`ios:small`, `ios:large` for other sizes) |
 
@@ -62,7 +64,7 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
 - The title is the Conventional Commit that lands on `main` (pull requests are squash-merged), written for release notes.
 - The description follows the [pull request template](.github/pull_request_template.md): `Closes #<issue>`, summary, checks run, the Definition of Done checklist, exactly one manual-test box, and the area checks that apply ([docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md)).
 - Required checks on `main` (ruleset in [.github/rulesets/main.json](.github/rulesets/main.json)):
-  - **CI:** lint, typecheck, test and build of the affected workspaces, root files and formatting;
+  - **CI:** lint, typecheck, test and build of the affected workspaces, root files and formatting, import rules (dependency-cruiser) and unused code (knip);
   - **PR title:** commitlint on the title;
   - **PR checklist:** fails while a Definition of Done box is unticked or not exactly one manual-test box is ticked.
 - CodeRabbit reviews each pull request when it is opened, and again after fixes for Critical or Major findings; every review thread must be resolved before merge. Review rules, CodeRabbit fixes and commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
