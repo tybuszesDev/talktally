@@ -52,7 +52,7 @@ This is a portfolio project built by one developer with an AI coding assistant:
 Because most code is written by an AI assistant, every pull request is reviewed in three layers ([ADR-0021](docs/adr/0021-code-review-for-ai-written-code.md)):
 
 1. **CI tools:** lint, typecheck, tests and build, a Conventional Commit title, and a description that follows the Definition of Done template.
-2. **[CodeRabbit](https://coderabbit.ai)**, an independent AI reviewer from another vendor. It reviews each pull request once when it is opened and is tuned to report real problems only. Every finding is fixed or answered, and open review threads block the merge. The owner can let CodeRabbit fix a small finding itself; it never merges and its other code-writing features are off ([ADR-0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md)).
+2. **[CodeRabbit](https://coderabbit.ai)**, an independent AI reviewer from another vendor. It reviews each pull request when it is opened, and again after fixes for critical or major findings, and is tuned to report real problems only. Every finding is fixed or answered, and open review threads block the merge. The owner can let CodeRabbit fix a small finding itself; it never merges and its other code-writing features are off ([ADR-0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md)).
 3. **The owner** reads the full diff and is the only one who merges.
 
 Details, including how findings are handled and the CodeRabbit commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).

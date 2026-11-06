@@ -65,7 +65,7 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
   - **CI:** lint, typecheck, test and build of the affected workspaces, root files and formatting;
   - **PR title:** commitlint on the title;
   - **PR checklist:** fails while a Definition of Done box is unticked or not exactly one manual-test box is ticked.
-- CodeRabbit reviews each pull request once when it is opened; every review thread must be resolved before merge. Review rules, CodeRabbit fixes and commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
+- CodeRabbit reviews each pull request when it is opened, and again after fixes for Critical or Major findings; every review thread must be resolved before merge. Review rules, CodeRabbit fixes and commands: [docs/CODE-REVIEW.md](docs/CODE-REVIEW.md).
 - `main` accepts only squash merges of pull requests that are up to date with it; force pushes and deletion are blocked, also for the owner.
 - Only the owner merges.
 

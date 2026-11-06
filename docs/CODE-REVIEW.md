@@ -15,8 +15,16 @@ Claude `/code-review` is an optional pre-check before a pull request is opened. 
 ## When CodeRabbit reviews
 
 - **Once, automatically, when the pull request is opened.** Draft pull requests are skipped until they are marked ready for review.
-- **Later pushes are not reviewed automatically.** Fix commits for review findings do not start a new round.
-- **Again only on request:** a comment with `@coderabbitai review` reviews the commits since the last review. Claude requests it only for commits that add behaviour beyond the review fixes, and says so in the pull request. The owner can request it at any time.
+- **Later pushes are not reviewed automatically.** A comment with `@coderabbitai review` reviews the commits since the last review.
+- **Whether a new review is needed depends on the severity** CodeRabbit gives each finding:
+
+| Findings in the review | New review |
+|---|---|
+| At least one **Critical** or **Major** finding fixed with a code change | Always: Claude requests one after the fix commits of that round are pushed |
+| Only **Minor** or **Trivial** findings, or findings answered without a code change | Not needed |
+| Commits that add behaviour beyond the review fixes | Claude requests one and says so in the pull request |
+
+A finding the owner considers more serious than its label counts as Major. The owner can request a review at any time.
 
 ## What CodeRabbit looks for
 
