@@ -16,7 +16,6 @@ Closes #
 - [ ] The change stays inside the issue; follow-up work is filed as new issues and every `TODO` has an issue number
 - [ ] Tests from ADR-0011 are included (a bug fix starts with a failing test) and coverage thresholds hold
 - [ ] Documentation that describes the changed behaviour is updated; a new decision has its ADR
-- [ ] Every review finding (CodeRabbit and owner) is fixed or answered in this pull request
 - [ ] The title is a Conventional Commit written for release notes
 
 ## Manual test

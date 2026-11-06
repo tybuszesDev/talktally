@@ -47,7 +47,7 @@ A feature, or one part of a split feature, is Done when all of the following are
 
 3. Tests from [ADR-0011](adr/0011-testing-strategy-and-quality-gates.md) are in the same pull request. A bug fix starts with a failing test. Coverage thresholds hold.
 4. All CI checks are green ([ADR-0017](adr/0017-code-quality-security-and-cost-checks.md)).
-5. The pull request is reviewed in three layers ([ADR-0021](adr/0021-code-review-for-ai-written-code.md)): CI tools, CodeRabbit, and the owner reading the full diff. Every finding is fixed or answered in the pull request.
+5. The pull request is reviewed in three layers ([ADR-0021](adr/0021-code-review-for-ai-written-code.md)): CI tools, CodeRabbit, and the owner reading the full diff. Every finding is fixed or answered in the pull request. The owner may let CodeRabbit fix a small, local finding with its "Fix comments" checkbox ([ADR-0023](adr/0023-coderabbit-fixes-on-owner-request.md)).
 
 **Product**
 
@@ -92,4 +92,4 @@ Apply each row whose area the change touches.
 
 ## Pull request checklist
 
-The [pull request template](../.github/pull_request_template.md) mirrors the feature Definition of Done, contains the two manual-test checkboxes, and lists the area checks as optional items. The `PR checklist` check ([scripts/check-pr-checklist.mjs](../scripts/check-pr-checklist.mjs)) reads the pull request description and fails while a Definition of Done box is unticked, while not exactly one manual-test box is ticked, or when `Closes #<issue>` is missing. Until the `dev` environment exists (M1), "manually tested" means tested locally. Items that can only be true after the merge (deployed to `dev`, issue closed, card in Done) are not in the template.
+The [pull request template](../.github/pull_request_template.md) mirrors the feature Definition of Done, contains the two manual-test checkboxes, and lists the area checks as optional items. The `PR checklist` check ([scripts/check-pr-checklist.mjs](../scripts/check-pr-checklist.mjs)) reads the pull request description and fails while a Definition of Done box is unticked, while not exactly one manual-test box is ticked, or when `Closes #<issue>` is missing. Until the `dev` environment exists (M1), "manually tested" means tested locally. Items that can only be true after the merge (deployed to `dev`, issue closed, card in Done) are not in the template. Review findings are not a checkbox either, because they arrive after the pull request is opened: the `main` ruleset blocks the merge while a review thread is unresolved, and the owner checks findings outside the diff before merging. A description filled in completely when the pull request is opened passes the check right away.

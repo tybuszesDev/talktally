@@ -49,8 +49,8 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 4. **Board:** move the card to In progress when the branch exists and to In review when the pull request is open (`gh project item-edit`, project 1, field Status).
 5. **Commits:** Conventional Commits, enforced by commitlint. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `build`, `perf`. Scope is optional and must be a workspace folder name or `infra`. Every commit ends with the trailer `Assisted-by: Claude Opus 5.5` (the model actually used); never `Co-Authored-By` (ADR-0022).
 6. **Pull request:** title = the planned commit title from the issue (it becomes the squash commit). The body follows `.github/pull_request_template.md`: `Closes #<issue>`, summary, checks run locally, the Definition of Done boxes (tick only what is true), exactly one manual-test box, and the area checks that apply. Required checks: `CI`, `PR title`, `PR checklist`; CodeRabbit threads must be resolved. No "Generated with Claude Code" footer.
-7. **Only the owner merges** (squash merge in the GitHub web UI). Review comments arrive as pull request comments: read them with `gh` and push fixes to the same branch.
-8. **Edits to code files need the owner's approval one by one** (`.claude/settings.json` asks for every code and config file, in every permission mode). Do not try to work around it.
+7. **Only the owner merges** (squash merge in the GitHub web UI); nothing is merged automatically. Review comments arrive as pull request comments: read them with `gh` and push fixes to the same branch. Fill in the whole description when opening the pull request; review findings are enforced by the ruleset, not by a checkbox.
+8. **Edits to code files need the owner's approval one by one** (`.claude/settings.json` asks for every code and config file, in every permission mode). Do not try to work around it. The only other source of code changes is CodeRabbit "Fix comments", which the owner triggers per finding (ADR-0023): run `git pull --ff-only` before continuing on a branch and review its commits like any diff.
 
 ## Code rules
 
@@ -104,6 +104,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0020](docs/adr/0020-schema-evolution-and-backward-compatibility.md) | Breaking changes follow expand → migrate → contract; the GraphQL schema only grows within a release; items carry `schemaVersion`. |
 | [0021](docs/adr/0021-code-review-for-ai-written-code.md) | Three review layers: CI tools, CodeRabbit, and the owner reading the full diff; only the owner merges; code edits approved one by one. |
 | [0022](docs/adr/0022-ai-assistance-commit-trailer.md) | Commits name the model with `Assisted-by: <model>`, not `Co-Authored-By`; AI use is stated in the README. |
+| [0023](docs/adr/0023-coderabbit-fixes-on-owner-request.md) | CodeRabbit "Fix comments" is on and triggered only by the owner per finding; other code-writing finishing touches off; no automatic merges. |
 
 ## Owner actions
 

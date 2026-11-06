@@ -65,9 +65,11 @@ describe('checkPullRequestBody', () => {
       '## Definition of Done\n\n- [x] done\n\n## Manual test',
     );
 
+    const requiredItems = parseChecklists(template).get('Definition of Done').length;
+
     const problems = check(body);
 
-    assert.equal(problems.length, 6);
+    assert.equal(problems.length, requiredItems);
     assert.ok(problems.every((problem) => problem.startsWith('Definition of Done item missing')));
   });
 
