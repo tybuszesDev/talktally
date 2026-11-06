@@ -56,14 +56,14 @@
       "groupName": "GitHub Actions"
     },
     {
-      "description": "GHCR gives no release timestamps, so Renovate cannot apply the 3-day release age to the gitleaks image and would hold its updates forever. Instead the update waits for approval in the Dependency Dashboard: approve it once the gitleaks release is at least 3 days old.",
+      "description": "GHCR gives no release timestamps, so Renovate cannot apply the 3-day release age to the gitleaks image and would hold its updates forever. Instead the update waits for approval in the Dependency Dashboard: approve it once the new image digest (not only the release) is at least 3 days old.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/gitleaks/gitleaks"],
       "groupName": "gitleaks image",
       "dependencyDashboardApproval": true,
       "minimumReleaseAgeBehaviour": "timestamp-optional",
       "prBodyNotes": [
-        "Approved by hand because GHCR has no release dates: the [gitleaks release](https://github.com/gitleaks/gitleaks/releases) must be at least 3 days old. After the merge, update the local pre-commit gitleaks (`brew upgrade gitleaks`)."
+        "Approved by hand because GHCR has no release dates: the new digest in this pull request must have been published at least 3 days ago. An old release can get a newly pushed digest, so check the digest itself on the [GHCR versions page](https://github.com/gitleaks/gitleaks/pkgs/container/gitleaks/versions?filters%5Bversion_type%5D=tagged) (\"Published ... · Digest\"). After the merge, update the local pre-commit gitleaks (`brew upgrade gitleaks`)."
       ]
     },
     {
