@@ -1,5 +1,7 @@
 # TalkTally
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/tybuszesDev/talktally/badge)](https://scorecard.dev/viewer/?uri=github.com/tybuszesDev/talktally)
+
 > You talk, it tallies.
 
 A voice-first tracker for the projects in your life. At the end of the day you talk to your phone; TalkTally turns what you said into updated tasks, inventory and progress, and shows you a plan for today.
@@ -52,7 +54,7 @@ This is a portfolio project built by one developer with an AI coding assistant:
 
 Because most code is written by an AI assistant, every pull request is reviewed in three layers ([ADR-0021](docs/adr/0021-code-review-for-ai-written-code.md)):
 
-1. **CI tools:** lint, typecheck, tests and build, architecture rules and unused code, a Conventional Commit title, and a description that follows the Definition of Done template.
+1. **CI tools:** lint, typecheck, tests and build, architecture rules and unused code, a secret scan, CodeQL code scanning, a Conventional Commit title, and a description that follows the Definition of Done template.
 2. **[CodeRabbit](https://coderabbit.ai)**, an independent AI reviewer from another vendor. It reviews each pull request when it is opened, and again after fixes for critical or major findings, and is tuned to report real problems only. Every finding is fixed or answered, and open review threads block the merge. The owner can let CodeRabbit fix a small finding itself; it never merges and its other code-writing features are off ([ADR-0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md)).
 3. **The owner** reads the full diff and is the only one who merges.
 
@@ -65,6 +67,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, setup and the local wo
 ## Security
 
 Please report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
+
+Automated checks ([ADR-0017](docs/adr/0017-code-quality-security-and-cost-checks.md)):
+
+- **[CodeQL](https://codeql.github.com)** scans the TypeScript code and the GitHub Actions workflows on every pull request, on `main` and weekly. New high or critical security alerts and new error-level alerts block the merge.
+- **[gitleaks](https://github.com/gitleaks/gitleaks)** scans the commits of every pull request and push to `main` for secrets, and the staged changes before every commit.
+- **[Renovate](https://docs.renovatebot.com)** (the Mend Renovate app) opens dependency updates once a week, grouped by area, and security updates right away. New versions are proposed and installed only after they are 3 days old.
+- **[OpenSSF Scorecard](https://scorecard.dev)** rates the security practices of the repository on `main` and weekly; the result is the badge at the top.
 
 ## License
 

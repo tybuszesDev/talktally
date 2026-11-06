@@ -6,7 +6,7 @@ How pull requests are reviewed in TalkTally. Most code is written by Claude Code
 
 | Layer | Who | What blocks the merge |
 |---|---|---|
-| 1. Deterministic tools | GitHub Actions | Required checks `CI` (lint, typecheck, test, build, architecture rules with dependency-cruiser, unused code with knip), `PR title` (Conventional Commit) and `PR checklist` (description follows the template) |
+| 1. Deterministic tools | GitHub Actions | Required checks `CI` (lint, typecheck, test, build, architecture rules with dependency-cruiser, unused code with knip), `Secret scan` (gitleaks), `PR title` (Conventional Commit) and `PR checklist` (description follows the template); CodeQL results with no new high or critical security alerts (code scanning merge protection) |
 | 2. Independent AI review | [CodeRabbit](https://coderabbit.ai), a reviewer from another vendor than the author | Unresolved review threads (`main` ruleset) |
 | 3. Owner review | The owner reads the full diff | Only the owner merges, with a squash merge in the GitHub web UI |
 

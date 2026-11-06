@@ -1,5 +1,6 @@
 # Lint, typecheck, test and build (ADR-0012, ADR-0017). On pull requests only the workspaces
 # affected by the change run; pushes to main run everything and refresh the Turborepo cache.
+# The secret scan (gitleaks) checks every pushed commit, whichever workspaces it touches.
 name: CI
 
 on:
@@ -65,3 +66,38 @@ jobs:
 
       - name: Test repository scripts
         run: pnpm test:scripts
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # The scanned range: the commits of the pull request, or the commits of a push to main.
+      SCAN_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      SCAN_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.after }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # The scanned range starts at the base of the pull request.
+          persist-credentials: false
+
+      # gitleaks reports "no leaks found" and exits 0 when git cannot read the range.
+      - name: Check that the scanned commits exist
+        run: git cat-file -e "$SCAN_BASE^{commit}" && git cat-file -e "$SCAN_HEAD^{commit}"
+
+      # The gitleaks CLI (MIT) from its official image, the same version as the pre-commit hook.
+      # `git log -p` shows no diff for merge commits; --diff-merges=first-parent also scans
+      # what a merge of main into the branch changed, such as a conflict resolution.
+      - name: Scan the pushed commits with gitleaks
+        uses: docker://ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+        env:
+          # The checkout belongs to the runner user and the container runs as root, so git
+          # refuses the repository without this. Environment config is a protected scope.
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: /github/workspace
+        with:
+          args: >-
+            git --redact --verbose --no-banner
+            "--log-opts=--diff-merges=first-parent ${{ env.SCAN_BASE }}..${{ env.SCAN_HEAD }}"
+            .

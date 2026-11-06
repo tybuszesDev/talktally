@@ -39,6 +39,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Upload URLs are scoped to one object key, one content type and a maximum size. The implementation uses a presigned POST policy with `content-length-range`, because a presigned PUT cannot limit the size.
 - Change sets are validated with Zod; referenced IDs are checked against the caller's project; DynamoDB writes use condition expressions and versions.
 - Branch protection, required checks and actions pinned by commit SHA protect the pipeline.
+- CodeQL scans the code and the workflows on every pull request; new high or critical security alerts block the merge. OpenSSF Scorecard rates the repository settings weekly (ADR-0017).
 
 ### Repudiation
 
@@ -51,6 +52,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - S3 buckets block public access; the web bucket is read only through CloudFront Origin Access Control.
 - Encryption at rest everywhere (AWS-managed keys) and TLS in transit.
 - Logs and Sentry events never contain transcripts, audio URLs or tokens (ADR-0015).
+- gitleaks scans staged changes before each commit and every pushed commit in CI; GitHub secret scanning with push protection is enabled.
 - According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
 
 ### Denial of service and denial of wallet
@@ -65,7 +67,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 - One IAM role per Lambda with least privilege; no wildcard actions on data resources.
 - CI roles split into read-only `plan` and `deploy`.
-- Dependency install scripts run only for an allowlist; new package versions wait a few days before use (ADR-0017).
+- Dependency install scripts run only for an allowlist; new package versions wait 3 days before use, both in pnpm and in Renovate, which proposes the updates; security updates come right away (ADR-0017).
 
 ### AI-specific: prompt injection
 

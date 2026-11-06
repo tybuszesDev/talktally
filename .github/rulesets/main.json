@@ -32,7 +32,20 @@
         "required_status_checks": [
           { "context": "CI", "integration_id": 15368 },
           { "context": "PR checklist", "integration_id": 15368 },
-          { "context": "PR title", "integration_id": 15368 }
+          { "context": "PR title", "integration_id": 15368 },
+          { "context": "Secret scan", "integration_id": 15368 }
+        ]
+      }
+    },
+    {
+      "type": "code_scanning",
+      "parameters": {
+        "code_scanning_tools": [
+          {
+            "tool": "CodeQL",
+            "security_alerts_threshold": "high_or_higher",
+            "alerts_threshold": "errors"
+          }
         ]
       }
     }
