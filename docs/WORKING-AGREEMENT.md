@@ -47,7 +47,7 @@ A feature, or one part of a split feature, is Done when all of the following are
 
 3. Tests from [ADR-0011](adr/0011-testing-strategy-and-quality-gates.md) are in the same pull request. A bug fix starts with a failing test. Coverage thresholds hold.
 4. All CI checks are green ([ADR-0017](adr/0017-code-quality-security-and-cost-checks.md)).
-5. The pull request is reviewed in three layers ([ADR-0021](adr/0021-code-review-for-ai-written-code.md)): CI tools, CodeRabbit, and the owner reading the full diff. Every finding is fixed or answered in the pull request. The owner may let CodeRabbit fix a small, local finding with its "Fix comments" checkbox ([ADR-0023](adr/0023-coderabbit-fixes-on-owner-request.md)).
+5. The pull request is reviewed in three layers ([ADR-0021](adr/0021-code-review-for-ai-written-code.md)): CI tools, CodeRabbit, and the owner reading the full diff. Every finding is fixed or answered in the pull request. How CodeRabbit runs and how findings are handled: [CODE-REVIEW](CODE-REVIEW.md).
 
 **Product**
 

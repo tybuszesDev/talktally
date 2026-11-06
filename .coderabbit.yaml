@@ -13,10 +13,14 @@ reviews:
   high_level_summary: false
   poem: false
   suggested_reviewers: false
+  # One automatic review when a pull request is opened; later pushes only on
+  # "@coderabbitai review" (ADR-0023, docs/CODE-REVIEW.md).
   auto_review:
     enabled: true
     drafts: false
-  # CodeRabbit writes code only when the owner ticks "Fix comments" under a finding (ADR-0023).
+    auto_incremental_review: false
+  # CodeRabbit writes code only when the owner replies "@coderabbitai fix comments" in a
+  # finding's thread (ADR-0023).
   # The other code-writing finishing touches stay off.
   finishing_touches:
     autofix:

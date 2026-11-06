@@ -32,7 +32,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0020](0020-schema-evolution-and-backward-compatibility.md) | Schema evolution and backward compatibility | Accepted |
 | [0021](0021-code-review-for-ai-written-code.md) | Code review for AI-written code | Accepted, amended by 0022 and 0023 |
 | [0022](0022-ai-assistance-commit-trailer.md) | AI assistance commit trailer | Accepted |
-| [0023](0023-coderabbit-fixes-on-owner-request.md) | CodeRabbit fixes on owner request | Accepted |
+| [0023](0023-coderabbit-review-cadence-and-fixes.md) | CodeRabbit review cadence and owner-requested fixes | Accepted |
 
 ## Template
 
