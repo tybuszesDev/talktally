@@ -47,6 +47,8 @@ jobs:
         run: pnpm exec turbo run lint typecheck test build $AFFECTED
         env:
           AFFECTED: ${{ github.event_name == 'pull_request' && '--affected' || '' }}
+          # The checkout has no local base branch, only the remote-tracking one.
+          TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
 
       - name: Lint root files and check formatting
         run: pnpm exec eslint scripts '*.config.js' && pnpm exec prettier --check .
