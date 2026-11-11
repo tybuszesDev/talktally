@@ -25,7 +25,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0013](0013-event-bus-for-domain-events-and-integrations.md) | Event bus for domain events and future integrations | Accepted |
 | [0014](0014-mobile-distribution-and-device-testing.md) | Mobile distribution and device testing | Accepted |
 | [0015](0015-observability.md) | Observability | Accepted |
-| [0016](0016-release-management-and-work-traceability.md) | Release management and work traceability | Accepted |
+| [0016](0016-release-management-and-work-traceability.md) | Release management and work traceability | Accepted, amended by 0025 |
 | [0017](0017-code-quality-security-and-cost-checks.md) | Code quality, security and cost checks in CI | Accepted |
 | [0018](0018-change-notifications-through-the-event-bus.md) | Change notifications through the event bus | Accepted |
 | [0019](0019-feature-size-and-splitting.md) | Feature size and splitting | Accepted |
@@ -34,6 +34,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0022](0022-ai-assistance-commit-trailer.md) | AI assistance commit trailer | Accepted |
 | [0023](0023-coderabbit-review-cadence-and-fixes.md) | CodeRabbit review cadence and owner-requested fixes | Accepted |
 | [0024](0024-documentation-first-and-session-per-feature.md) | Documentation first and one session per feature | Accepted |
+| [0025](0025-release-please-with-a-github-app-token.md) | release-please with a GitHub App token | Accepted |
 
 ## Template
 

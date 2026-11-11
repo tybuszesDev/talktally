@@ -73,6 +73,28 @@ Formatting happens only in the hook and in CI. No editor setup is needed.
 - `main` accepts only squash merges of pull requests that are up to date with it; force pushes and deletion are blocked, also for the owner.
 - Only the owner merges.
 
+## Releases
+
+[release-please](https://github.com/googleapis/release-please) keeps one release pull request open, titled `chore: release X.Y.Z`. It contains the next product version and the new `CHANGELOG.md` entry ([ADR-0016](docs/adr/0016-release-management-and-work-traceability.md), [ADR-0025](docs/adr/0025-release-please-with-a-github-app-token.md)). The workflow is [.github/workflows/release.yml](.github/workflows/release.yml); the settings are in [release-please-config.json](release-please-config.json) and [.release-please-manifest.json](.release-please-manifest.json).
+
+- **Version:** one for the whole product, in the root `package.json`. The first release is `0.1.0`. Before `1.0.0`, `feat` raises the minor version, `fix` the patch version, and a breaking change only the minor version.
+- **Changelog:** built from the squash commits on `main`. `feat`, `fix` and `perf` commits appear in it; `docs`, `chore`, `ci`, `refactor`, `test` and `build` do not. Pushes with only those types open no release pull request.
+- **Releasing:** review the release pull request like any other: the changelog must read well for users. Squash-merge it; release-please then creates the tag `vX.Y.Z` and the GitHub Release.
+- **Version 1.0.0:** put the line `Release-As: 1.0.0` in the body of the squash commit of the last MVP pull request (in a commit message on the branch, or in the merge dialog). release-please then proposes `1.0.0`.
+
+### GitHub App and `release` environment
+
+release-please uses a token of a GitHub App, so the checks run on the release pull request and the tags can start later workflows. One-time setup by the owner:
+
+1. Register the App on the personal account. This [prefilled form](https://github.com/settings/apps/new?name=talktally-release&description=release-please%20for%20tybuszesDev%2Ftalktally&url=https://github.com/tybuszesDev/talktally&public=false&contents=write&issues=write&pull_requests=write) selects the permissions Contents, Issues and Pull requests (Read and write), no webhook, and "Only on this account". If the name is taken, choose another one. Click **Create GitHub App**.
+2. On the App page, copy the **Client ID**. Under **Private keys**, click **Generate a private key**; a `.pem` file downloads.
+3. **Install App** on the account, with **Only select repositories** → `talktally`.
+4. In the repository, open **Settings → Environments → New environment** and name it `release`. Under **Deployment branches and tags**, choose **Selected branches and tags** and add `main`.
+5. In the `release` environment, add the variable `RELEASE_APP_CLIENT_ID` (the Client ID) and the secret `RELEASE_APP_PRIVATE_KEY` (the whole content of the `.pem` file).
+6. Delete the `.pem` file.
+
+To rotate the key: generate a new private key, replace the secret, then delete the old key on the App page.
+
 ## Dependencies
 
 - Versions shared by several workspaces live in the pnpm catalog in `pnpm-workspace.yaml`.
