@@ -1,0 +1,3 @@
+# Copy this file to private.auto.tfvars (git ignores it) and set the address.
+# Terraform loads *.auto.tfvars files automatically.
+alert_email = "you@example.com"

@@ -21,6 +21,10 @@ coverage/
 *.tfstate
 *.tfstate.*
 *.tfplan
+# Values that must not be public, such as the alert email (ADR-0012)
+private.auto.tfvars
+# Temporary overrides, such as the local backend for the first bootstrap apply
+*_override.tf
 crash.log
 
 # Expo / React Native
