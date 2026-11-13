@@ -5,7 +5,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 ## Assets
 
 - **User data:** projects, work items, inventory, transcripts, audio recordings.
-- **Credentials:** Cognito tokens on devices, AWS roles used by CI.
+- **Credentials:** Cognito tokens on devices, AWS roles used by CI, the owner's IAM administrator user.
 - **The AWS bill.** Transcription and AI calls cost money per use, so abuse is a financial attack ("denial of wallet").
 - **The AWS account and the deployment pipeline.**
 - **The public repository** and its history.
@@ -33,6 +33,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Cognito SRP sign-in, optional TOTP MFA, short-lived access tokens.
 - OIDC trust policies are restricted to this repository, the `main` branch and the `prod` environment. Workflows triggered from forks get no AWS role.
 - Backend-only GraphQL mutations accept only IAM authorization, so clients cannot call them.
+- The owner's administrator access is an IAM user with passkey MFA. The CLI and Terraform get temporary credentials through `aws login`. No access keys exist for any user, and the root user is used only for account and billing tasks (ADR-0026).
 
 ### Tampering
 
@@ -50,7 +51,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 - Ownership is part of the DynamoDB key design; every resolver verifies the project belongs to the caller. Subscriptions are filtered by the caller's identity. Automated tests cover cross-user access (ADR-0011).
 - S3 buckets block public access; the web bucket is read only through CloudFront Origin Access Control.
-- Encryption at rest everywhere (AWS-managed keys) and TLS in transit.
+- Encryption at rest everywhere (AWS-managed keys) and TLS in transit. One exception: the `talktally-alerts` SNS topic is not encrypted at rest. AWS Budgets cannot publish to a topic encrypted with the AWS-managed key, and a customer managed key would cost about 1 USD per month. The topic carries cost alerts only, never user content ([bootstrap README](../infra/terraform/bootstrap/README.md)).
 - Logs and Sentry events never contain transcripts, audio URLs or tokens (ADR-0015).
 - gitleaks scans staged changes before each commit and every pushed commit in CI; GitHub secret scanning with push protection is enabled.
 - According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.

@@ -37,7 +37,8 @@ Things only the owner can do. Check this list before starting each feature.
 |---|---|
 | F-05b | Install the Mend Renovate GitHub App on `tybuszesDev/talktally` only (not on all repositories) |
 | F-06 (before merge) | Register the release GitHub App and create the `release` environment with its client ID and private key ([CONTRIBUTING](../CONTRIBUTING.md#github-app-and-release-environment)) |
-| F-10 | Install Terraform and the AWS CLI. Create an administrator user in IAM Identity Center with MFA, so the root account is never used for daily work |
+| F-10 | Install Terraform and the AWS CLI (2.32.0 or later). Create an IAM administrator user with passkey MFA and sign in with `aws login`, so the root account is never used for daily work ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
+| Before the free plan ends | Upgrade the AWS account to the paid plan by hand in the Billing console, so the account does not close ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | F-12 | Add the four NS records for `talktally.tybu.com` in the Hostinger DNS zone editor |
 | F-14 | Record 3 real renovation dictations (1–3 minutes each). Enable Bedrock model access for Anthropic models |
 | F-24 | Active Apple Developer Program membership; free Expo account |
