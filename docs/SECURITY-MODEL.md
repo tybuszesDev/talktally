@@ -5,7 +5,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 ## Assets
 
 - **User data:** projects, work items, inventory, transcripts, audio recordings.
-- **Credentials:** Cognito tokens on devices, AWS roles used by CI.
+- **Credentials:** Cognito tokens on devices, AWS roles used by CI, the owner's IAM administrator user.
 - **The AWS bill.** Transcription and AI calls cost money per use, so abuse is a financial attack ("denial of wallet").
 - **The AWS account and the deployment pipeline.**
 - **The public repository** and its history.
@@ -33,6 +33,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Cognito SRP sign-in, optional TOTP MFA, short-lived access tokens.
 - OIDC trust policies are restricted to this repository, the `main` branch and the `prod` environment. Workflows triggered from forks get no AWS role.
 - Backend-only GraphQL mutations accept only IAM authorization, so clients cannot call them.
+- The owner's administrator access is an IAM user with passkey MFA. The CLI and Terraform get temporary credentials through `aws login`. No access keys exist for any user, and the root user is used only for account and billing tasks (ADR-0026).
 
 ### Tampering
 

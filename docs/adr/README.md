@@ -35,6 +35,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0023](0023-coderabbit-review-cadence-and-fixes.md) | CodeRabbit review cadence and owner-requested fixes | Accepted |
 | [0024](0024-documentation-first-and-session-per-feature.md) | Documentation first and one session per feature | Accepted |
 | [0025](0025-release-please-with-a-github-app-token.md) | release-please with a GitHub App token | Accepted |
+| [0026](0026-admin-access-with-iam-user-and-aws-login.md) | Administrator access with an IAM user and `aws login` | Accepted |
 
 ## Template
 

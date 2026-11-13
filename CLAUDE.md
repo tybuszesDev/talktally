@@ -116,10 +116,11 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0023](docs/adr/0023-coderabbit-review-cadence-and-fixes.md) | CodeRabbit reviews once when a pull request is opened, again after fixes for Critical or Major findings; "Fix comments" triggered only by the owner per finding; other code-writing finishing touches off; no automatic merges. |
 | [0024](docs/adr/0024-documentation-first-and-session-per-feature.md) | Sources in order: repository, official docs for the version in use, package code; nothing from memory; one Claude Code session per feature. |
 | [0025](docs/adr/0025-release-please-with-a-github-app-token.md) | release-please runs with a GitHub App token kept in the `release` environment (main only); tags `vX.Y.Z`, title `chore: release X.Y.Z`, first release `0.1.0`. |
+| [0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md) | Daily admin access is an IAM user with passkey MFA and `aws login` (no access keys); no Identity Center or Organizations while on the free plan, so the credits stay. |
 
 ## Owner actions
 
 Some features need something only the owner can do (accounts, DNS, recordings). The list is in [docs/ROADMAP.md](docs/ROADMAP.md#owner-actions).
 
 - Check it before starting each feature. If the feature needs an action that is not done, say so and stop.
-- Remind the owner early about upcoming actions, especially the long-running ones: the Mend Renovate app before F-05b, real renovation dictations (3 before F-14, 20+ before F-45), the Apple Developer Program before F-24, Terraform, AWS CLI and an IAM Identity Center admin user before F-10.
+- Remind the owner early about upcoming actions, especially the long-running ones: the Mend Renovate app before F-05b, real renovation dictations (3 before F-14, 20+ before F-45), the Apple Developer Program before F-24, the manual upgrade to the AWS paid plan before the free plan ends (ADR-0026).

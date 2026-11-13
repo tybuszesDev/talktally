@@ -15,6 +15,7 @@ Security problems: see [SECURITY.md](SECURITY.md), not public issues.
 - **gitleaks** for the pre-commit secret scan: `brew install gitleaks`.
 - For the mobile app: **Xcode** with an iOS simulator, and the **Xcode Command Line Tools** (`xcode-select --install`).
 - For infrastructure work only: **Terraform** from HashiCorp's tap: `brew install hashicorp/tap/terraform` (needs the Command Line Tools).
+- For infrastructure work only: the **AWS CLI 2.32.0 or later** from the [official macOS installer](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). Sign in with `aws login --profile talktally-admin` and `export AWS_PROFILE=talktally-admin` ([ADR-0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md)). The one-time setup is in [infra/terraform/bootstrap/README.md](infra/terraform/bootstrap/README.md).
 - Keep the clone **outside iCloud-synced folders** such as Desktop or Documents: iCloud adds file attributes that break Xcode code signing.
 
 ## Setup
