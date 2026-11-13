@@ -32,7 +32,7 @@ Since AWS CLI 2.32.0, `aws login` signs the CLI in with console credentials. The
 - The credits stay available, and the account needs no organization.
 - An IAM user has a long-lived password. Passkey MFA and the absence of access keys limit the risk.
 - One person, one account: there is no central place to manage several users. Inviting more administrators would need more IAM users.
-- Tools must support console credentials (`login_session` in the shared config file). The AWS SDK for Go v2 supports them from `config` v1.32.0, which the Terraform AWS provider and the S3 backend in use already include. Older tools can use a `credential_process` profile that calls `aws configure export-credentials`, as the AWS CLI guide describes.
+- Tools must support console credentials (`login_session` in the shared config file). The AWS SDK for Go v2 supports them from `config` v1.32.0, which the Terraform AWS provider in use already includes. The S3 backend supports them from Terraform 1.15.0, so the stacks require Terraform 1.15 or later. Older tools can use a `credential_process` profile that calls `aws configure export-credentials`, as the AWS CLI guide describes.
 - Moving to IAM Identity Center later is possible once the credits are used up or have expired. That change needs a new ADR.
 
 ## Alternatives considered

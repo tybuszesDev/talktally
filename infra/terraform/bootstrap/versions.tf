@@ -1,5 +1,7 @@
 terraform {
-  required_version = ">= 1.10"
+  # 1.15 is the first version whose S3 backend accepts `aws login` credentials
+  # (ADR-0026); 1.11 added `override_during`, which the tests use.
+  required_version = ">= 1.15"
 
   required_providers {
     aws = {

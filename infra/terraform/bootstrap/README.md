@@ -17,7 +17,7 @@ Design notes:
 
 ## Prerequisites
 
-- Terraform 1.10 or later, and the AWS CLI 2.32.0 or later ([CONTRIBUTING](../../../CONTRIBUTING.md#prerequisites)).
+- Terraform 1.15 or later, because earlier S3 backends cannot use `aws login` credentials. Also the AWS CLI 2.32.0 or later ([CONTRIBUTING](../../../CONTRIBUTING.md#prerequisites)).
 - An administrator session ([ADR-0026](../../../docs/adr/0026-admin-access-with-iam-user-and-aws-login.md)):
 
   ```sh

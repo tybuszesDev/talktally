@@ -51,7 +51,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 - Ownership is part of the DynamoDB key design; every resolver verifies the project belongs to the caller. Subscriptions are filtered by the caller's identity. Automated tests cover cross-user access (ADR-0011).
 - S3 buckets block public access; the web bucket is read only through CloudFront Origin Access Control.
-- Encryption at rest everywhere (AWS-managed keys) and TLS in transit.
+- Encryption at rest everywhere (AWS-managed keys) and TLS in transit. One exception: the `talktally-alerts` SNS topic is not encrypted at rest. AWS Budgets cannot publish to a topic encrypted with the AWS-managed key, and a customer managed key would cost about 1 USD per month. The topic carries cost alerts only, never user content ([bootstrap README](../infra/terraform/bootstrap/README.md)).
 - Logs and Sentry events never contain transcripts, audio URLs or tokens (ADR-0015).
 - gitleaks scans staged changes before each commit and every pushed commit in CI; GitHub secret scanning with push protection is enabled.
 - According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
