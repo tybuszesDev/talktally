@@ -50,7 +50,7 @@ Jobs without an environment (Scorecard, CodeQL, release) cannot assume the deplo
   - Step Functions execution input and history;
   - Transcribe job results;
   - Cognito user records;
-  - the owner's contact details: SNS subscription lists, which show the alert email address, and the account contact information.
+  - the owner's contact details: SNS subscription lists, which show the alert email address, the CloudTrail event history, which shows subscription ARNs, and the account contact information.
 
 **Deploy role permissions:**
 

@@ -197,13 +197,17 @@ resource "aws_iam_role_policy" "ci_plan_deny_user_data" {
       },
       {
         # Other ways to the owner's contact details: subscription endpoints
-        # (the alert email) and the account contact information.
+        # (the alert email) and the account contact information. CloudTrail
+        # event history shows subscription ARNs, and GetSubscriptionAttributes
+        # (needed by Terraform) returns the endpoint for a known ARN.
         Sid    = "DenyOwnerContactReads"
         Effect = "Deny"
         Action = [
           "account:GetAlternateContact",
           "account:GetContactInformation",
           "account:GetPrimaryEmail",
+          "cloudtrail:GetQueryResults",
+          "cloudtrail:LookupEvents",
           "sns:ListSubscriptions",
           "sns:ListSubscriptionsByTopic",
         ]

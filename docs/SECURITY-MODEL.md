@@ -72,7 +72,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 - One IAM role per Lambda with least privilege; no wildcard actions on data resources.
 - CI roles split into read-only `plan` and `deploy` (ADR-0027). The role ARNs are GitHub secrets, so the account ID stays out of the public logs.
-  - `plan` has `ReadOnlyAccess` minus reads of user data: S3 objects outside the state bucket, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results, Cognito users and the owner's contact details (SNS subscription lists, account contact information). Pull request jobs may run code from dependency updates. Its only write is the lock file of an environment stack. Secret values never enter Terraform state, because this role can read the environment state.
+  - `plan` has `ReadOnlyAccess` minus reads of user data: S3 objects outside the state bucket, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results, Cognito users and the owner's contact details (SNS subscription lists, CloudTrail event history, account contact information). Pull request jobs may run code from dependency updates. Its only write is the lock file of an environment stack. Secret values never enter Terraform state, because this role can read the environment state.
   - `deploy` has `PowerUserAccess`, plus IAM only for `talktally-dev-*` and `talktally-prod-*` roles and policies. Each such role must carry the `talktally-workload-boundary` permissions boundary, which excludes IAM, Organizations and account actions.
   - The deploy role and the boundary both deny:
     - account settings and contact details, billing and cost changes;
