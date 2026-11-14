@@ -29,7 +29,7 @@ Rules:
 - **CI access:** GitHub Actions assume IAM roles through OIDC. A read-only `plan` role for pull requests, a `deploy` role restricted to the `main` branch and the `prod` GitHub Environment. No long-lived access keys anywhere.
 - **Lambda artifacts:** CI builds each function with esbuild into a zip; Terraform deploys it with `source_code_hash`, so code changes trigger updates.
 - **Configuration and secrets:** non-secret values in committed `*.tfvars`; secret values in SSM Parameter Store (SecureString), created outside Terraform state or referenced by name only.
-- **DNS:** the domain `tybu.me` stays registered at Hostinger. The subdomain `talktally.tybu.me` is delegated to a Route 53 hosted zone by adding its NS records in the Hostinger DNS zone editor (one manual step). Terraform then manages all records and certificate validation inside that zone. (Corrected by ADR-0028: this ADR first named the domain `tybu.com`, which belongs to someone else.)
+- **DNS:** the domain `tybu.me` stays registered at Hostinger. The subdomain `talktally.tybu.me` is delegated to a Route 53 hosted zone by adding its NS records in the Hostinger DNS zone editor (one manual step). Terraform then manages all records and certificate validation inside that zone. (Corrected and amended by ADR-0028: this ADR first named the domain `tybu.com`, which belongs to someone else. Hostinger cannot delegate a subdomain, so Route 53 serves all of `tybu.me` and the delegation is an NS record in Route 53.)
   - The hosted zone is created in `bootstrap/`, not in an environment, because the NS records at Hostinger must never change.
   - Host names:
 

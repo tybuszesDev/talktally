@@ -93,7 +93,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 |---|---|
 | [0001](docs/adr/0001-monorepo-pnpm-turborepo.md) | One pnpm + Turborepo monorepo, TypeScript (strict, ESM) on Node 24; packages never import apps or services. |
 | [0002](docs/adr/0002-serverless-aws-and-cost-guardrails.md) | Only pay-per-request or free AWS services in `eu-central-1`; budget alarm at 10 USD/month; no NAT, EC2, RDS or VPC Lambdas. |
-| [0003](docs/adr/0003-terraform-infrastructure-as-code.md) | All infrastructure in Terraform (>= 1.10) with S3 state, dev and prod roots, OIDC for CI, secrets in SSM Parameter Store; `talktally.tybu.me` delegated from Hostinger to Route 53. |
+| [0003](docs/adr/0003-terraform-infrastructure-as-code.md) | All infrastructure in Terraform (>= 1.10) with S3 state, dev and prod roots, OIDC for CI, secrets in SSM Parameter Store; DNS of `talktally.tybu.me` in Route 53. |
 | [0004](docs/adr/0004-authentication-with-cognito.md) | Cognito user pool per environment, SRP sign-in with own screens via Amplify JS v6 (auth and api only), invite-only, demo account. |
 | [0005](docs/adr/0005-graphql-api-with-appsync.md) | Schema-first AppSync GraphQL API with one routing Lambda resolver, generated types, owner-filtered subscriptions. |
 | [0006](docs/adr/0006-dynamodb-single-table.md) | One on-demand DynamoDB table per environment, single-table design from DOMAIN access patterns, change sets in one transaction. |
@@ -118,7 +118,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0025](docs/adr/0025-release-please-with-a-github-app-token.md) | release-please runs with a GitHub App token kept in the `release` environment (main only); tags `vX.Y.Z`, title `chore: release X.Y.Z`, first release `0.1.0`. |
 | [0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md) | Daily admin access is an IAM user with passkey MFA and `aws login` (no access keys); no Identity Center or Organizations while on the free plan, so the credits stay. |
 | [0027](docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md) | CI roles trust the immutable OIDC subject: `plan` for pull requests (ReadOnlyAccess minus user data), `deploy` only for the `dev` and `prod` environments (PowerUserAccess, workload IAM roles need the `talktally-workload-boundary` boundary). |
-| [0028](docs/adr/0028-route-53-zone-for-the-app-subdomain.md) | Zone `talktally.tybu.me` in the bootstrap stack with `prevent_destroy`; apex NS, SOA and SPF TXT owned there; CI cannot delete the zone, touch DNSSEC or change NS/SOA records. |
+| [0028](docs/adr/0028-route-53-zone-for-the-app-subdomain.md) | Hostinger only registers `tybu.me`; Route 53 zones `tybu.me` (delegation only) and `talktally.tybu.me` live in the bootstrap stack with `prevent_destroy`; CI cannot touch the `tybu.me` zone, delete the app zone, change its DNSSEC or its NS/SOA records. |
 
 ## Owner actions
 

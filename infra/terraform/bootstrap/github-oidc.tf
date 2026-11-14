@@ -111,8 +111,17 @@ locals {
       Resource = aws_sns_topic.alerts.arn
     },
     {
-      # The NS records at Hostinger name this zone's name servers, so the zone
-      # must stay (ADR-0028). DNSSEC is a zone setting, which this stack owns.
+      # The environment stacks never need the tybu.me zone. A change there
+      # could redirect or break the whole domain (ADR-0028).
+      Sid      = "DenyParentDnsZoneAccess"
+      Effect   = "Deny"
+      Action   = "route53:*"
+      Resource = aws_route53_zone.parent.arn
+    },
+    {
+      # The delegation in the tybu.me zone names this zone's name servers, so
+      # the zone must stay (ADR-0028). DNSSEC is a zone setting, which this
+      # stack owns.
       Sid    = "DenyDnsZoneDeletionAndDnssec"
       Effect = "Deny"
       Action = [

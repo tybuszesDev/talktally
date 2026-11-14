@@ -44,10 +44,22 @@ mock_provider "aws" {
     }
   }
 
-  mock_resource "aws_route53_zone" {
-    defaults = {
-      arn     = "arn:aws:route53:::hostedzone/Z0123456789ABCDEFGHIJ"
-      zone_id = "Z0123456789ABCDEFGHIJ"
+  # Two zones of the same type, so each gets its own values by address.
+  override_resource {
+    target = aws_route53_zone.parent
+    values = {
+      arn          = "arn:aws:route53:::hostedzone/ZPARENT0000000000000"
+      zone_id      = "ZPARENT0000000000000"
+      name_servers = ["ns-1.awsdns-01.org", "ns-2.awsdns-02.co.uk", "ns-3.awsdns-03.com", "ns-4.awsdns-04.net"]
+    }
+  }
+
+  override_resource {
+    target = aws_route53_zone.app
+    values = {
+      arn          = "arn:aws:route53:::hostedzone/ZAPP00000000000000000"
+      zone_id      = "ZAPP00000000000000000"
+      name_servers = ["ns-5.awsdns-05.org", "ns-6.awsdns-06.co.uk", "ns-7.awsdns-07.com", "ns-8.awsdns-08.net"]
     }
   }
 }
@@ -169,18 +181,41 @@ run "anomaly_alerts_are_immediate_from_one_dollar" {
   }
 }
 
-run "app_zone_is_public_with_a_no_mail_spf_record" {
+run "tybu_me_zone_delegates_the_app_subdomain_to_its_own_zone" {
   command = plan
 
   assert {
-    condition     = aws_route53_zone.app.name == "talktally.tybu.me"
-    error_message = "The zone must be the app subdomain delegated from Hostinger."
+    condition     = aws_route53_zone.parent.name == "tybu.me" && aws_route53_zone.app.name == "talktally.tybu.me"
+    error_message = "Route 53 must serve tybu.me and the app subdomain in two zones."
   }
 
   assert {
-    condition     = length(aws_route53_zone.app.vpc) == 0
-    error_message = "The zone must be public, with no VPC association."
+    condition     = length(aws_route53_zone.parent.vpc) == 0 && length(aws_route53_zone.app.vpc) == 0
+    error_message = "Both zones must be public, with no VPC association."
   }
+
+  assert {
+    condition = (
+      aws_route53_record.app_delegation.zone_id == aws_route53_zone.parent.zone_id &&
+      aws_route53_record.app_delegation.name == "talktally.tybu.me" &&
+      aws_route53_record.app_delegation.type == "NS"
+    )
+    error_message = "The tybu.me zone must hold the NS record of the app subdomain."
+  }
+
+  assert {
+    condition     = aws_route53_record.app_delegation.records == toset(aws_route53_zone.app.name_servers)
+    error_message = "The delegation must name the app zone's name servers."
+  }
+
+  assert {
+    condition     = output.dns_name_servers == aws_route53_zone.parent.name_servers
+    error_message = "The output for Hostinger must be the name servers of the tybu.me zone, not the app zone."
+  }
+}
+
+run "app_zone_has_a_no_mail_spf_record" {
+  command = plan
 
   assert {
     condition = (
@@ -517,6 +552,19 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
   assert {
     condition = one([
       for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyParentDnsZoneAccess"
+      ]) == {
+      Sid      = "DenyParentDnsZoneAccess"
+      Effect   = "Deny"
+      Action   = "route53:*"
+      Resource = "arn:aws:route53:::hostedzone/ZPARENT0000000000000"
+    }
+    error_message = "CI must not touch the tybu.me zone at all."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
       if s.Sid == "DenyDnsZoneDeletionAndDnssec"
     ]).Resource == aws_route53_zone.app.arn
     error_message = "The guards must cover the app DNS zone."
@@ -541,7 +589,7 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
       Sid       = "DenyDnsDelegationRecordChanges"
       Effect    = "Deny"
       Action    = "route53:ChangeResourceRecordSets"
-      Resource  = "arn:aws:route53:::hostedzone/Z0123456789ABCDEFGHIJ"
+      Resource  = "arn:aws:route53:::hostedzone/ZAPP00000000000000000"
       Condition = { "ForAnyValue:StringEquals" = { "route53:ChangeResourceRecordSetsRecordTypes" = ["NS", "SOA"] } }
     }
     error_message = "CI must not change NS or SOA records, even in a request with other record types."

@@ -11,7 +11,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | ADR | Title | Status |
 |---|---|---|
 | [0001](0001-monorepo-pnpm-turborepo.md) | Monorepo with pnpm workspaces and Turborepo | Accepted |
-| [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted |
+| [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted, amended by 0028 |
 | [0003](0003-terraform-infrastructure-as-code.md) | Terraform for all infrastructure | Accepted, amended by 0027 and 0028 |
 | [0004](0004-authentication-with-cognito.md) | Authentication with Amazon Cognito | Accepted |
 | [0005](0005-graphql-api-with-appsync.md) | GraphQL API with AWS AppSync | Accepted, amended by 0018 |
@@ -37,7 +37,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0025](0025-release-please-with-a-github-app-token.md) | release-please with a GitHub App token | Accepted |
 | [0026](0026-admin-access-with-iam-user-and-aws-login.md) | Administrator access with an IAM user and `aws login` | Accepted |
 | [0027](0027-ci-access-to-aws-with-github-oidc-roles.md) | CI access to AWS with GitHub OIDC roles | Accepted, amended by 0028 |
-| [0028](0028-route-53-zone-for-the-app-subdomain.md) | Route 53 zone for the app subdomain | Accepted |
+| [0028](0028-route-53-zone-for-the-app-subdomain.md) | Route 53 zones for tybu.me and the app subdomain | Accepted |
 
 ## Template
 
