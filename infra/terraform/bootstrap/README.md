@@ -12,6 +12,8 @@ Account-level resources that every other stack depends on. They are applied once
 | IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data: S3 objects outside the state bucket, the bootstrap state, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results, Cognito users and the owner's contact details (SNS subscription lists, CloudTrail event history, account contact information). It may write only the lock files of the environment stacks (`envs/*.tflock`). |
 | IAM role `talktally-ci-deploy` | For jobs in the `dev` and `prod` GitHub environments. `PowerUserAccess`, plus IAM for roles and policies named `talktally-dev-*` and `talktally-prod-*`. Each such role must carry the boundary below. |
 | IAM policy `talktally-workload-boundary` | Permissions boundary of every role the deploy role creates: no IAM, Organizations or account actions. |
+| Route 53 hosted zone `talktally.tybu.me` | Public zone of the app subdomain, delegated from the `tybu.me` zone at Hostinger ([ADR-0028](../../../docs/adr/0028-route-53-zone-for-the-app-subdomain.md)). `prevent_destroy` keeps it, because a new zone gets new name servers. The environment stacks find it by name and add their own records. |
+| TXT record `talktally.tybu.me` | `v=spf1 -all`: the subdomain sends no mail, so receivers reject mail that claims to come from it. It is also the record that proves the delegation. |
 
 Design notes:
 
@@ -23,7 +25,8 @@ Design notes:
   - account settings and contact details, billing and cost changes, including Budgets, Cost Anomaly Detection, the Free Tier plan and Identity Center;
   - changes to the state bucket configuration and deleting old state versions;
   - any access to the bootstrap state (`bootstrap/*`);
-  - changes to the alerts topic and its subscriptions.
+  - changes to the alerts topic and its subscriptions;
+  - deleting the DNS zone, changing its DNSSEC settings, and changing NS or SOA records in it. Other records stay open to the environment stacks.
 
   So a role the deploy role creates cannot get around these limits either.
 - **CI cannot change these roles.** Terraform owns their policies exclusively: a policy added by hand is removed on the next apply. Changes go through this stack, applied locally.
@@ -104,6 +107,26 @@ The workflow `.github/workflows/terraform.yml` assumes the roles. It needs two G
 
 The next pull request that changes `infra/terraform/` runs the job "AWS plan role". After the merge, the job "AWS deploy role" runs in the `dev` environment.
 
+## DNS delegation
+
+The domain `tybu.me` and its DNS stay at Hostinger. Hostinger delegates the subdomain `talktally` to the Route 53 zone of this stack. This is done once, after the zone exists ([ADR-0028](../../../docs/adr/0028-route-53-zone-for-the-app-subdomain.md)).
+
+1. Print the four name servers of the zone:
+
+   ```sh
+   terraform output dns_name_servers
+   ```
+
+2. In the Hostinger DNS zone editor of `tybu.me`, add four records of type `NS`. Each has the name `talktally`, one of the name servers as its value, and the default TTL. Do not add any other record named `talktally` there.
+3. Check the delegation from outside AWS. Expect the four Route 53 name servers from the first command and `"v=spf1 -all"` from the second:
+
+   ```sh
+   dig +short NS talktally.tybu.me @1.1.1.1
+   dig +short TXT talktally.tybu.me @8.8.8.8
+   ```
+
+   A resolver that answered before the delegation may keep the old "no such name" answer for up to the negative caching time of the `tybu.me` zone (the last value of its SOA record, 600 seconds at Hostinger). `dig +trace TXT talktally.tybu.me` asks the authoritative servers directly.
+
 ## First apply on a new account
 
 The state bucket is created by this stack, so the first apply uses local state. The state then moves into the bucket.
@@ -146,6 +169,7 @@ The state bucket is created by this stack, so the first apply uses local state. 
    ```
 
 7. Set up the environments and secrets in GitHub, as described in [GitHub access](#github-access).
+8. Delegate the subdomain at Hostinger, as described in [DNS delegation](#dns-delegation).
 
 ## Free plan
 

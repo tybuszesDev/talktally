@@ -43,6 +43,13 @@ mock_provider "aws" {
       arn = "arn:aws:iam::123456789012:policy/talktally-workload-boundary"
     }
   }
+
+  mock_resource "aws_route53_zone" {
+    defaults = {
+      arn     = "arn:aws:route53:::hostedzone/Z0123456789ABCDEFGHIJ"
+      zone_id = "Z0123456789ABCDEFGHIJ"
+    }
+  }
 }
 
 variables {
@@ -159,6 +166,34 @@ run "anomaly_alerts_are_immediate_from_one_dollar" {
   assert {
     condition     = one(aws_ce_anomaly_subscription.alerts.subscriber).address == aws_sns_topic.alerts.arn
     error_message = "Anomaly alerts must go to the alerts topic."
+  }
+}
+
+run "app_zone_is_public_with_a_no_mail_spf_record" {
+  command = plan
+
+  assert {
+    condition     = aws_route53_zone.app.name == "talktally.tybu.me"
+    error_message = "The zone must be the app subdomain delegated from Hostinger."
+  }
+
+  assert {
+    condition     = length(aws_route53_zone.app.vpc) == 0
+    error_message = "The zone must be public, with no VPC association."
+  }
+
+  assert {
+    condition = (
+      aws_route53_record.app_spf.zone_id == aws_route53_zone.app.zone_id &&
+      aws_route53_record.app_spf.name == "talktally.tybu.me" &&
+      aws_route53_record.app_spf.type == "TXT"
+    )
+    error_message = "The SPF record must be the TXT record at the zone apex."
+  }
+
+  assert {
+    condition     = aws_route53_record.app_spf.records == toset(["v=spf1 -all"])
+    error_message = "The SPF record must say that the subdomain sends no mail."
   }
 }
 
@@ -477,6 +512,46 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
       ]),
     )) == 0
     error_message = "CI must not read, write, delete or replicate into the bootstrap state."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyDnsZoneDeletionAndDnssec"
+    ]).Resource == aws_route53_zone.app.arn
+    error_message = "The guards must cover the app DNS zone."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      ["route53:DeleteHostedZone", "route53:DisableHostedZoneDNSSEC", "route53:EnableHostedZoneDNSSEC", "route53:CreateKeySigningKey"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
+        if s.Sid == "DenyDnsZoneDeletionAndDnssec"
+      ]),
+    )) == 0
+    error_message = "CI must not delete the app DNS zone or change its DNSSEC settings."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyDnsDelegationRecordChanges"
+      ]) == {
+      Sid       = "DenyDnsDelegationRecordChanges"
+      Effect    = "Deny"
+      Action    = "route53:ChangeResourceRecordSets"
+      Resource  = "arn:aws:route53:::hostedzone/Z0123456789ABCDEFGHIJ"
+      Condition = { "ForAnyValue:StringEquals" = { "route53:ChangeResourceRecordSetsRecordTypes" = ["NS", "SOA"] } }
+    }
+    error_message = "CI must not change NS or SOA records, even in a request with other record types."
+  }
+
+  # IAM quota for customer managed policies. jsonencode writes no whitespace,
+  # so the length of the string is the size that IAM counts.
+  assert {
+    condition     = length(aws_iam_policy.workload_boundary.policy) <= 6144
+    error_message = "The workload boundary must stay within the 6,144-character limit of a managed policy."
   }
 }
 

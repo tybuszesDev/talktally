@@ -78,8 +78,9 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
     - account settings and contact details, billing and cost changes;
     - state bucket configuration changes and deleting old state versions;
     - any access to the bootstrap state;
-    - changes to the alerts topic and its subscriptions.
-  - So CI cannot create users or access keys, change its own trust or the OIDC provider, enroll the account in Organizations, or weaken the cost alerts.
+    - changes to the alerts topic and its subscriptions;
+    - deleting the DNS zone `talktally.tybu.me`, changing its DNSSEC settings, and changing NS or SOA records in it (ADR-0028).
+  - So CI cannot create users or access keys, change its own trust or the OIDC provider, enroll the account in Organizations, weaken the cost alerts, or break or redirect the delegation from Hostinger.
 - CI never reads or writes the bootstrap state. A changed state could make the owner's next local `terraform init` install a foreign provider, which `plan` would run with administrator credentials. The owner also runs `terraform init -lockfile=readonly` for the bootstrap stack, so a provider missing from the committed lock file stops the init (ADR-0027). The state bucket policy denies requests through access points, so no second path to the state objects can bypass these denies.
 - Dependency install scripts run only for an allowlist; new package versions wait 3 days before use, both in pnpm and in Renovate, which proposes the updates; security updates come right away (ADR-0017).
 
@@ -104,7 +105,7 @@ User rights in the MVP:
 
 - **Data export:** a JSON archive of all the user's data, delivered through a time-limited download link.
 - **Account deletion** from inside the app (also required by Apple for apps that offer account creation). It removes Cognito, DynamoDB and S3 data.
-- A **privacy policy** page at `talktally.tybu.com/privacy`, required for TestFlight and the App Store.
+- A **privacy policy** page at `talktally.tybu.me/privacy`, required for TestFlight and the App Store.
 
 ## Controls considered and not used
 
