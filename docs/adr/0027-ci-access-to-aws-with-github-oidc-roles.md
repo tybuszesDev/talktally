@@ -49,7 +49,8 @@ Jobs without an environment (Scorecard, CodeQL, release) cannot assume the deplo
   - SQS messages;
   - Step Functions execution input and history;
   - Transcribe job results;
-  - Cognito user records.
+  - Cognito user records;
+  - the owner's contact details: SNS subscription lists, which show the alert email address, and the account contact information.
 
 **Deploy role permissions:**
 
@@ -59,13 +60,17 @@ Jobs without an environment (Scorecard, CodeQL, release) cannot assume the deplo
 
 **Shared denies.** Both the deploy role and the boundary deny:
 
-- account, billing and cost services: Budgets, Cost Explorer and Cost Anomaly Detection, Free Tier plan changes, payments and Identity Center;
-- changes to the state bucket configuration;
+- account, billing and cost services: account settings and contact details, Budgets, Cost Explorer and Cost Anomaly Detection, Free Tier plan changes, payments and Identity Center;
+- changes to the state bucket configuration, including replication;
 - deleting old state versions;
 - any access to the bootstrap state (`bootstrap/*`): reads, writes, deletes, restores and replication;
 - changes to the alerts topic and its subscriptions.
 
 **CI never touches the bootstrap state.** The owner applies the bootstrap stack locally with administrator credentials. Terraform takes provider requirements from both the configuration and the state ([dependency lock file](https://developer.hashicorp.com/terraform/language/files/dependency-lock)). A changed bootstrap state could name a foreign provider, which the owner's next `terraform init` would install and `terraform plan` would run with administrator credentials. The environment stacks therefore read bootstrap values through data sources, never through `terraform_remote_state`. As a second line of defence, the owner runs `terraform init -lockfile=readonly` for the bootstrap stack. It fails with "Provider dependency changes detected" when a provider is missing from the committed lock file.
+
+**No access points on the state bucket.** S3 authorizes a request made through an access point against the access point ARN, a separate resource type from bucket objects ([service reference](https://servicereference.us-east-1.amazonaws.com/v1/s3/s3.json)). The CI roles' denies name bucket ARNs. The state bucket policy therefore denies every request that carries `s3:DataAccessPointArn`, and the deploy role cannot change that policy.
+
+**Secret values never enter Terraform state.** The plan role reads the state of the environment stacks. As ADR-0003 requires, secret values are created outside Terraform, or set with write-only arguments such as `value_wo` of `aws_ssm_parameter` (Terraform 1.11 and later), which are never stored in state ([provider docs](https://registry.terraform.io/providers/hashicorp/aws/6.72.0/docs/resources/ssm_parameter)).
 
 Because of these denies, the deploy role cannot:
 
@@ -86,7 +91,7 @@ Because of these denies, the deploy role cannot:
 - Every workload role needs the boundary and the environment prefix in its name, or the apply fails with `AccessDenied`. The environment stacks find the boundary policy, the alerts topic and the state bucket by name, because they cannot read the bootstrap state.
 - The state keys of the environment stacks start with `envs/`, because the plan role may lock only those keys.
 - The plan role's deny list can block the refresh of a resource whose read is a data read. For example, a Cognito user managed in Terraform needs `AdminGetUser`. Such a change updates the list in the bootstrap stack and in SECURITY-MODEL.
-- `ReadOnlyAccess` includes `ssm:GetParameter*`. The feature that adds the first SecureString parameter also adds it to the deny list.
+- `ReadOnlyAccess` includes `ssm:GetParameter*`. The feature that adds the first SecureString parameter also denies reading it to the plan role, and sets its value outside Terraform state.
 - CI cannot change its own permissions. Every change to the CI roles is applied locally by the owner (ADR-0003).
 - The environments are created once by the owner through the GitHub REST API, as documented in the bootstrap README.
 

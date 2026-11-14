@@ -81,6 +81,21 @@ run "state_bucket_is_versioned_encrypted_and_private" {
     condition     = jsondecode(aws_s3_bucket_policy.state.policy).Statement[0].Condition.Bool["aws:SecureTransport"] == "false"
     error_message = "The bucket policy must deny requests without TLS."
   }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_s3_bucket_policy.state.policy).Statement : s
+      if s.Sid == "DenyAccessPointRequests"
+      ]) == {
+      Sid       = "DenyAccessPointRequests"
+      Effect    = "Deny"
+      Principal = "*"
+      Action    = "s3:*"
+      Resource  = ["arn:aws:s3:::talktally-tfstate-3af2cc3e", "arn:aws:s3:::talktally-tfstate-3af2cc3e/*"]
+      Condition = { Null = { "s3:DataAccessPointArn" = "false" } }
+    }
+    error_message = "The bucket policy must deny every request made through an access point."
+  }
 }
 
 run "budget_counts_cost_before_credits_and_alerts_the_topic" {
@@ -282,6 +297,17 @@ run "plan_role_reads_infrastructure_but_not_user_data" {
     )) == 0
     error_message = "The plan role must not read user records, items, logs or execution history."
   }
+
+  assert {
+    condition = length(setsubtract(
+      ["account:GetContactInformation", "account:GetPrimaryEmail", "sns:ListSubscriptions", "sns:ListSubscriptionsByTopic"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s.Action
+        if s.Sid == "DenyOwnerContactReads" && s.Effect == "Deny" && s.Resource == "*"
+      ]),
+    )) == 0
+    error_message = "The plan role must not read the owner's contact details or the alert subscriptions."
+  }
 }
 
 run "deploy_role_manages_only_bounded_workload_roles" {
@@ -365,22 +391,33 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
 
   assert {
     condition = length(setsubtract(
-      ["budgets:*", "ce:*", "freetier:*", "payments:*", "sso:*"],
+      ["account:*", "budgets:*", "ce:*", "freetier:*", "payments:*", "sso:*"],
       one([
         for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
-        if s.Sid == "DenyAccountBillingAndCostChanges" && s.Resource == "*"
+        if s.Sid == "DenyAccountBillingAndCost" && s.Resource == "*"
       ]),
     )) == 0
-    error_message = "The guards must deny budgets, cost, Free Tier plan, payment and Identity Center changes."
+    error_message = "The guards must deny account, budgets, cost, Free Tier plan, payment and Identity Center actions."
+  }
+
+  # one() fails when a guard is missing, so deleting a guard fails the test.
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyStateBucketChanges"
+    ]).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e"
+    error_message = "The guards must cover the state bucket."
   }
 
   assert {
-    condition = alltrue([
-      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement :
-      s.Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e" && length(setsubtract(["s3:DeleteBucket", "s3:PutBucketPolicy", "s3:PutBucketVersioning"], s.Action)) == 0
-      if s.Sid == "DenyStateBucketChanges"
-    ])
-    error_message = "The guards must protect the state bucket configuration."
+    condition = length(setsubtract(
+      ["s3:DeleteBucket", "s3:PutBucketPolicy", "s3:PutBucketVersioning", "s3:PutReplicationConfiguration"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
+        if s.Sid == "DenyStateBucketChanges"
+      ]),
+    )) == 0
+    error_message = "The guards must protect the state bucket configuration, including replication."
   }
 
   assert {
@@ -397,11 +434,21 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
   }
 
   assert {
-    condition = alltrue([
-      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement :
-      s.Resource == aws_sns_topic.alerts.arn && length(setsubtract(["sns:DeleteTopic", "sns:SetSubscriptionAttributes", "sns:SetTopicAttributes", "sns:Subscribe"], s.Action)) == 0
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
       if s.Sid == "DenyAlertsTopicChanges"
-    ])
+    ]).Resource == aws_sns_topic.alerts.arn
+    error_message = "The guards must cover the alerts topic."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      ["sns:DeleteTopic", "sns:SetSubscriptionAttributes", "sns:SetTopicAttributes", "sns:Subscribe"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
+        if s.Sid == "DenyAlertsTopicChanges"
+      ]),
+    )) == 0
     error_message = "The guards must protect the alerts topic and its subscriptions."
   }
 
@@ -415,7 +462,7 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
 
   assert {
     condition = length(setsubtract(
-      ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ReplicateObject"],
+      ["s3:GetObject", "s3:GetObjectVersionForReplication", "s3:PutObject", "s3:DeleteObject", "s3:ReplicateObject"],
       one([
         for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
         if s.Sid == "DenyBootstrapStateAccess"

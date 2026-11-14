@@ -71,6 +71,24 @@ resource "aws_s3_bucket_policy" "state" {
           }
         }
       },
+      {
+        # State is read and written only through the bucket itself. Requests
+        # through an access point are authorized against the access point ARN,
+        # where the CI roles' denies on bucket ARNs might not apply (ADR-0027).
+        Sid       = "DenyAccessPointRequests"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.state.arn,
+          "${aws_s3_bucket.state.arn}/*",
+        ]
+        Condition = {
+          Null = {
+            "s3:DataAccessPointArn" = "false"
+          }
+        }
+      },
     ]
   })
 

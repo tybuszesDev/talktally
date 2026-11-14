@@ -4,12 +4,12 @@ Account-level resources that every other stack depends on. They are applied once
 
 | Resource | Purpose |
 |---|---|
-| S3 bucket `talktally-tfstate-3af2cc3e` | Terraform state for all root modules, each under its own key. It has versioning, SSE-S3 encryption, all public access blocked, ACLs disabled and a TLS-only bucket policy. Old state versions expire after 90 days; the 10 newest are always kept. Locking uses S3 lock files (`use_lockfile`), so there is no DynamoDB table. |
+| S3 bucket `talktally-tfstate-3af2cc3e` | Terraform state for all root modules, each under its own key. It has versioning, SSE-S3 encryption, all public access blocked and ACLs disabled. The bucket policy denies requests without TLS and requests through access points. Old state versions expire after 90 days; the 10 newest are always kept. Locking uses S3 lock files (`use_lockfile`), so there is no DynamoDB table. |
 | SNS topic `talktally-alerts` | One topic for all alerts, with the owner's email subscribed. AWS Budgets and Cost Anomaly Detection may publish to it. |
 | AWS Budgets `talktally-monthly` | 10 USD per month ([ADR-0002](../../../docs/adr/0002-serverless-aws-and-cost-guardrails.md)). It alerts at 50% and 100% of actual cost and at 100% of forecast cost. |
 | Cost Anomaly Detection | The AWS services monitor (`Default-Services-Monitor`, adopted by import) and the subscription `talktally-anomalies`. It sends individual alerts for anomalies of 1 USD or more. |
 | IAM OIDC provider `token.actions.githubusercontent.com` | Lets GitHub Actions assume IAM roles with short-lived tokens, so no AWS keys are stored ([ADR-0027](../../../docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md)). |
-| IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data: S3 objects outside the state bucket, the bootstrap state, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results and Cognito users. It may write only the lock files of the environment stacks (`envs/*.tflock`). |
+| IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data: S3 objects outside the state bucket, the bootstrap state, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results, Cognito users and the owner's contact details (SNS subscription lists, account contact information). It may write only the lock files of the environment stacks (`envs/*.tflock`). |
 | IAM role `talktally-ci-deploy` | For jobs in the `dev` and `prod` GitHub environments. `PowerUserAccess`, plus IAM for roles and policies named `talktally-dev-*` and `talktally-prod-*`. Each such role must carry the boundary below. |
 | IAM policy `talktally-workload-boundary` | Permissions boundary of every role the deploy role creates: no IAM, Organizations or account actions. |
 
@@ -20,7 +20,7 @@ Design notes:
 - **No account ID or email address is committed** ([ADR-0012](../../../docs/adr/0012-git-workflow-and-ci-cd.md)). The account ID is read at run time with `aws_caller_identity`. The email address comes from `private.auto.tfvars`, which git ignores.
 - **The CI roles trust exact OIDC subjects.** This repository uses GitHub's immutable subject format, `repo:tybuszesDev@58275357/talktally@1447250076:…`, which contains the owner and repository IDs. A recycled owner or repository name cannot produce it. The plan role trusts `…:pull_request`. The deploy role trusts only `…:environment:dev` and `…:environment:prod`, so jobs without an environment cannot deploy, even on `main`.
 - **The deploy role cannot change its own access.** It cannot touch the OIDC provider, the CI roles, IAM users or access keys. Every role it creates must carry `talktally-workload-boundary`. The role and the boundary both deny:
-  - account, billing and cost changes, including Budgets, Cost Anomaly Detection, the Free Tier plan and Identity Center;
+  - account settings and contact details, billing and cost changes, including Budgets, Cost Anomaly Detection, the Free Tier plan and Identity Center;
   - changes to the state bucket configuration and deleting old state versions;
   - any access to the bootstrap state (`bootstrap/*`);
   - changes to the alerts topic and its subscriptions.

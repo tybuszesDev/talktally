@@ -28,10 +28,12 @@ locals {
   # role it creates, so the deploy role cannot get around them.
   bootstrap_guard_statements = [
     {
-      # Includes Free Tier plan changes, payments and Identity Center (ADR-0026).
-      Sid    = "DenyAccountBillingAndCostChanges"
+      # Includes Free Tier plan changes, payments and Identity Center (ADR-0026),
+      # and the account contact details (name, address, phone, root email).
+      Sid    = "DenyAccountBillingAndCost"
       Effect = "Deny"
       Action = [
+        "account:*",
         "aws-portal:*",
         "billing:*",
         "budgets:*",
@@ -61,6 +63,7 @@ locals {
         "s3:PutBucketVersioning",
         "s3:PutEncryptionConfiguration",
         "s3:PutLifecycleConfiguration",
+        "s3:PutReplicationConfiguration",
       ]
       Resource = aws_s3_bucket.state.arn
     },
@@ -81,6 +84,7 @@ locals {
         "s3:DeleteObject",
         "s3:GetObject",
         "s3:GetObjectVersion",
+        "s3:GetObjectVersionForReplication",
         "s3:PutObject",
         "s3:ReplicateDelete",
         "s3:ReplicateObject",
@@ -190,6 +194,20 @@ resource "aws_iam_role_policy" "ci_plan_deny_user_data" {
         Effect   = "Deny"
         Action   = ["s3:GetObject", "s3:GetObjectVersion"]
         Resource = "${aws_s3_bucket.state.arn}/bootstrap/*"
+      },
+      {
+        # Other ways to the owner's contact details: subscription endpoints
+        # (the alert email) and the account contact information.
+        Sid    = "DenyOwnerContactReads"
+        Effect = "Deny"
+        Action = [
+          "account:GetAlternateContact",
+          "account:GetContactInformation",
+          "account:GetPrimaryEmail",
+          "sns:ListSubscriptions",
+          "sns:ListSubscriptionsByTopic",
+        ]
+        Resource = "*"
       },
       {
         Sid    = "DenyUserDataReads"
