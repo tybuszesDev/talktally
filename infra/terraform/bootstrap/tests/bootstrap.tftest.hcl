@@ -31,6 +31,18 @@ mock_provider "aws" {
       arn = "arn:aws:ce::123456789012:anomalymonitor/00000000-0000-0000-0000-000000000000"
     }
   }
+
+  mock_resource "aws_iam_openid_connect_provider" {
+    defaults = {
+      arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+    }
+  }
+
+  mock_resource "aws_iam_policy" {
+    defaults = {
+      arn = "arn:aws:iam::123456789012:policy/talktally-workload-boundary"
+    }
+  }
 }
 
 variables {
@@ -132,6 +144,254 @@ run "anomaly_alerts_are_immediate_from_one_dollar" {
   assert {
     condition     = one(aws_ce_anomaly_subscription.alerts.subscriber).address == aws_sns_topic.alerts.arn
     error_message = "Anomaly alerts must go to the alerts topic."
+  }
+}
+
+run "github_oidc_provider_issues_tokens_for_sts" {
+  command = plan
+
+  assert {
+    condition     = aws_iam_openid_connect_provider.github.url == "https://token.actions.githubusercontent.com"
+    error_message = "The OIDC provider must be GitHub Actions."
+  }
+
+  assert {
+    condition     = toset(aws_iam_openid_connect_provider.github.client_id_list) == toset(["sts.amazonaws.com"])
+    error_message = "The only audience must be sts.amazonaws.com."
+  }
+}
+
+run "plan_role_trusts_only_pull_requests_of_this_repository" {
+  command = plan
+
+  assert {
+    condition     = length(jsondecode(aws_iam_role.ci_plan.assume_role_policy).Statement) == 1
+    error_message = "The plan role must have exactly one trust statement."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.ci_plan.assume_role_policy).Statement[0].Principal.Federated == aws_iam_openid_connect_provider.github.arn
+    error_message = "The plan role must trust only the GitHub OIDC provider."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.ci_plan.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:aud"] == "sts.amazonaws.com"
+    error_message = "The plan role must require the sts.amazonaws.com audience."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.ci_plan.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:tybuszesDev@58275357/talktally@1447250076:pull_request"
+    error_message = "The plan role must trust only pull requests of this repository, by its immutable subject."
+  }
+
+  assert {
+    condition     = toset(keys(jsondecode(aws_iam_role.ci_plan.assume_role_policy).Statement[0].Condition)) == toset(["StringEquals"])
+    error_message = "The plan role trust must use exact matches only, no wildcards."
+  }
+}
+
+run "deploy_role_trusts_only_the_dev_and_prod_environments" {
+  command = plan
+
+  assert {
+    condition     = length(jsondecode(aws_iam_role.ci_deploy.assume_role_policy).Statement) == 1
+    error_message = "The deploy role must have exactly one trust statement."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.ci_deploy.assume_role_policy).Statement[0].Principal.Federated == aws_iam_openid_connect_provider.github.arn
+    error_message = "The deploy role must trust only the GitHub OIDC provider."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.ci_deploy.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:aud"] == "sts.amazonaws.com"
+    error_message = "The deploy role must require the sts.amazonaws.com audience."
+  }
+
+  assert {
+    condition = toset(jsondecode(aws_iam_role.ci_deploy.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"]) == toset([
+      "repo:tybuszesDev@58275357/talktally@1447250076:environment:dev",
+      "repo:tybuszesDev@58275357/talktally@1447250076:environment:prod",
+    ])
+    error_message = "The deploy role must trust only the dev and prod environments of this repository, not a branch."
+  }
+
+  assert {
+    condition     = toset(keys(jsondecode(aws_iam_role.ci_deploy.assume_role_policy).Statement[0].Condition)) == toset(["StringEquals"])
+    error_message = "The deploy role trust must use exact matches only, no wildcards."
+  }
+}
+
+run "plan_role_reads_infrastructure_but_not_user_data" {
+  command = plan
+
+  assert {
+    condition     = toset(aws_iam_role_policy_attachments_exclusive.ci_plan.policy_arns) == toset(["arn:aws:iam::aws:policy/ReadOnlyAccess"])
+    error_message = "The plan role must have exactly the ReadOnlyAccess managed policy."
+  }
+
+  assert {
+    condition     = toset(aws_iam_role_policies_exclusive.ci_plan.policy_names) == toset(["state-lock", "deny-user-data"])
+    error_message = "The plan role must have exactly the state-lock and deny-user-data inline policies."
+  }
+
+  assert {
+    condition     = one(jsondecode(aws_iam_role_policy.ci_plan_state_lock.policy).Statement).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/*.tflock"
+    error_message = "The plan role may write only lock files in the state bucket."
+  }
+
+  assert {
+    condition     = toset(one(jsondecode(aws_iam_role_policy.ci_plan_state_lock.policy).Statement).Action) == toset(["s3:PutObject", "s3:DeleteObject"])
+    error_message = "The plan role may only put and delete lock files."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s
+      if s.Sid == "DenyObjectsOutsideStateBucket" && s.Effect == "Deny" && contains(s.Action, "s3:GetObject")
+    ]).NotResource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/*"
+    error_message = "The plan role must not read S3 objects outside the state bucket."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      [
+        "cognito-idp:ListUsers",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "states:GetExecutionHistory",
+      ],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s.Action
+        if s.Sid == "DenyUserDataReads" && s.Effect == "Deny" && s.Resource == "*"
+      ]),
+    )) == 0
+    error_message = "The plan role must not read user records, items, logs or execution history."
+  }
+}
+
+run "deploy_role_manages_only_bounded_workload_roles" {
+  command = plan
+
+  assert {
+    condition     = toset(aws_iam_role_policy_attachments_exclusive.ci_deploy.policy_arns) == toset(["arn:aws:iam::aws:policy/PowerUserAccess"])
+    error_message = "The deploy role must have exactly the PowerUserAccess managed policy."
+  }
+
+  assert {
+    condition     = toset(aws_iam_role_policies_exclusive.ci_deploy.policy_names) == toset(["workload-iam", "bootstrap-guards"])
+    error_message = "The deploy role must have exactly the workload-iam and bootstrap-guards inline policies."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_workload_iam.policy).Statement : s
+      if s.Sid == "ManageWorkloadRolesWithBoundary"
+    ]).Condition.StringEquals["iam:PermissionsBoundary"] == aws_iam_policy.workload_boundary.arn
+    error_message = "Creating or changing a workload role must require the workload boundary."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      ["iam:CreateRole", "iam:PutRolePolicy", "iam:AttachRolePolicy", "iam:PutRolePermissionsBoundary", "iam:UpdateAssumeRolePolicy"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_workload_iam.policy).Statement : s.Action
+        if s.Sid == "ManageWorkloadRolesWithBoundary"
+      ]),
+    )) == 0
+    error_message = "Every role write that grants permissions must be under the boundary condition."
+  }
+
+  assert {
+    condition = alltrue([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_workload_iam.policy).Statement :
+      alltrue([
+        for r in s.Resource : can(regex("^arn:aws:iam::123456789012:(role|policy)/talktally-(dev|prod)-\\*$", r))
+      ])
+      if s.Effect == "Allow" && s.Sid != "ReadIam"
+    ])
+    error_message = "IAM writes must be limited to talktally-dev-* and talktally-prod-* roles and policies, never the CI roles."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_workload_iam.policy).Statement : s
+      if s.Sid == "ReadIam"
+    ]).Action == ["iam:Get*", "iam:List*"]
+    error_message = "The only IAM statement on all resources must be read-only."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_workload_iam.policy).Statement : s
+      if s.Sid == "KeepBoundaries"
+    ]) == { Sid = "KeepBoundaries", Effect = "Deny", Action = "iam:DeleteRolePermissionsBoundary", Resource = "*" }
+    error_message = "Removing a permissions boundary must be denied."
+  }
+}
+
+run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
+  command = plan
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_policy.workload_boundary.policy).Statement : s.NotAction
+      if s.Effect == "Allow"
+    ]) == ["iam:*", "organizations:*", "account:*"]
+    error_message = "The boundary must allow everything except IAM, Organizations and account actions."
+  }
+
+  assert {
+    condition = jsonencode(jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement) == jsonencode([
+      for s in jsondecode(aws_iam_policy.workload_boundary.policy).Statement : s
+      if s.Effect == "Deny"
+    ])
+    error_message = "The deploy role and the boundary must deny the same things, so created roles cannot get around the guards."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      ["budgets:*", "ce:*", "freetier:*", "payments:*", "sso:*"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
+        if s.Sid == "DenyAccountBillingAndCostChanges" && s.Resource == "*"
+      ]),
+    )) == 0
+    error_message = "The guards must deny budgets, cost, Free Tier plan, payment and Identity Center changes."
+  }
+
+  assert {
+    condition = alltrue([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement :
+      s.Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e" && length(setsubtract(["s3:DeleteBucket", "s3:PutBucketPolicy", "s3:PutBucketVersioning"], s.Action)) == 0
+      if s.Sid == "DenyStateBucketChanges"
+    ])
+    error_message = "The guards must protect the state bucket configuration."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyStateHistoryDeletion"
+      ]) == {
+      Sid      = "DenyStateHistoryDeletion"
+      Effect   = "Deny"
+      Action   = "s3:DeleteObjectVersion"
+      Resource = "arn:aws:s3:::talktally-tfstate-3af2cc3e/*"
+    }
+    error_message = "The guards must keep old state versions."
+  }
+
+  assert {
+    condition = alltrue([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement :
+      s.Resource == aws_sns_topic.alerts.arn && length(setsubtract(["sns:DeleteTopic", "sns:SetTopicAttributes", "sns:Subscribe"], s.Action)) == 0
+      if s.Sid == "DenyAlertsTopicChanges"
+    ])
+    error_message = "The guards must protect the alerts topic."
   }
 }
 

@@ -117,6 +117,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0024](docs/adr/0024-documentation-first-and-session-per-feature.md) | Sources in order: repository, official docs for the version in use, package code; nothing from memory; one Claude Code session per feature. |
 | [0025](docs/adr/0025-release-please-with-a-github-app-token.md) | release-please runs with a GitHub App token kept in the `release` environment (main only); tags `vX.Y.Z`, title `chore: release X.Y.Z`, first release `0.1.0`. |
 | [0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md) | Daily admin access is an IAM user with passkey MFA and `aws login` (no access keys); no Identity Center or Organizations while on the free plan, so the credits stay. |
+| [0027](docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md) | CI roles trust the immutable OIDC subject: `plan` for pull requests (ReadOnlyAccess minus user data), `deploy` only for the `dev` and `prod` environments (PowerUserAccess, workload IAM roles need the `talktally-workload-boundary` boundary). |
 
 ## Owner actions
 

@@ -64,7 +64,7 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 | ID | Commit | Done when |
 |---|---|---|
 | F-10 | `feat(infra): add bootstrap stack with state, budgets and alerts` | State bucket with native locking; AWS Budgets (10 USD) and Cost Anomaly Detection email alerts; SNS alerts topic; applied locally and documented |
-| F-11 | `feat(infra): add GitHub OIDC roles` | `plan` and `deploy` roles trusted only by this repository, `main` and the `prod` environment; no access keys exist |
+| F-11 | `feat(infra): add GitHub OIDC roles` | `plan` role trusted only by pull requests of this repository; `deploy` role trusted only by the `dev` and `prod` environments, which accept only `main` (and release tags for prod); no access keys exist ([ADR-0027](adr/0027-ci-access-to-aws-with-github-oidc-roles.md)) |
 | F-12 | `feat(infra): add Route 53 zone for talktally.tybu.com` | Zone created; NS records added at Hostinger; `dig` resolves a test record |
 | F-13 | `ci: add Terraform pipeline for the dev environment` | Root modules `envs/dev` and `envs/prod` with tagging; PRs show fmt, validate, tflint, trivy, `terraform test`, plan and Infracost comments; merge applies dev |
 | F-14 | `docs: record Bedrock and Transcribe spike results` | Bedrock access to Claude Opus 5.5 confirmed from `eu-central-1`; account plan type checked; Transcribe `pl-PL` quality tested on 3 real renovation dictations; results and costs written down |

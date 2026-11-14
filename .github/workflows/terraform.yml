@@ -1,0 +1,91 @@
+# AWS access for the Terraform pipeline (ADR-0003, ADR-0027). GitHub Actions assume IAM roles
+# through OIDC; no AWS keys are stored. Pull requests get the read-only plan role; jobs in the
+# dev and prod environments get the deploy role. The role ARNs are secrets, so the account ID
+# stays out of the public logs. Setup: infra/terraform/bootstrap/README.md, "GitHub access".
+#
+# For now each job only proves that its role can be assumed. F-13 replaces these checks with
+# fmt, validate, tflint, trivy, test, plan and apply.
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - 'infra/terraform/**'
+      - '.github/workflows/terraform.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/terraform/**'
+      - '.github/workflows/terraform.yml'
+
+# Each job asks for what it needs.
+permissions: {}
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  AWS_REGION: eu-central-1
+  STATE_BUCKET: talktally-tfstate-3af2cc3e
+
+jobs:
+  plan-access:
+    name: AWS plan role
+    # Pull requests from forks get no secrets and no OIDC token, so the job would only fail.
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write # OIDC token for AWS STS.
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Check the assumed role
+        run: |
+          arn="$(aws sts get-caller-identity --query Arn --output text)"
+          case "$arn" in
+            *":assumed-role/talktally-ci-plan/"*) echo "The job assumed talktally-ci-plan." ;;
+            *) echo "::error::The job did not assume talktally-ci-plan."; exit 1 ;;
+          esac
+
+      # The plan role may write only *.tflock files. This key is not a lock file and not a
+      # state file, so the write must be denied.
+      - name: Check that the role cannot write state
+        run: |
+          if output="$(aws s3api put-object --bucket "$STATE_BUCKET" --key ci/write-check 2>&1)"; then
+            echo "::error::The plan role could write to the state bucket."
+            exit 1
+          fi
+          case "$output" in
+            *AccessDenied*) echo "Write denied, as expected." ;;
+            *) echo "::error::Unexpected error: $output"; exit 1 ;;
+          esac
+
+  deploy-access:
+    name: AWS deploy role
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # The deploy role trusts only jobs in the dev and prod environments; dev accepts only main.
+    environment: dev
+    permissions:
+      id-token: write # OIDC token for AWS STS.
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Check the assumed role
+        run: |
+          arn="$(aws sts get-caller-identity --query Arn --output text)"
+          case "$arn" in
+            *":assumed-role/talktally-ci-deploy/"*) echo "The job assumed talktally-ci-deploy." ;;
+            *) echo "::error::The job did not assume talktally-ci-deploy."; exit 1 ;;
+          esac

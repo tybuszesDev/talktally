@@ -8,12 +8,24 @@ Account-level resources that every other stack depends on. They are applied once
 | SNS topic `talktally-alerts` | One topic for all alerts, with the owner's email subscribed. AWS Budgets and Cost Anomaly Detection may publish to it. |
 | AWS Budgets `talktally-monthly` | 10 USD per month ([ADR-0002](../../../docs/adr/0002-serverless-aws-and-cost-guardrails.md)). It alerts at 50% and 100% of actual cost and at 100% of forecast cost. |
 | Cost Anomaly Detection | The AWS services monitor (`Default-Services-Monitor`, adopted by import) and the subscription `talktally-anomalies`. It sends individual alerts for anomalies of 1 USD or more. |
+| IAM OIDC provider `token.actions.githubusercontent.com` | Lets GitHub Actions assume IAM roles with short-lived tokens, so no AWS keys are stored ([ADR-0027](../../../docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md)). |
+| IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data (S3 objects outside the state bucket, DynamoDB items, log events, Step Functions executions, Cognito users). It may write only `*.tflock` lock files in the state bucket. |
+| IAM role `talktally-ci-deploy` | For jobs in the `dev` and `prod` GitHub environments. `PowerUserAccess`, plus IAM for roles and policies named `talktally-dev-*` and `talktally-prod-*`. Each such role must carry the boundary below. |
+| IAM policy `talktally-workload-boundary` | Permissions boundary of every role the deploy role creates: no IAM, Organizations or account actions. |
 
 Design notes:
 
 - **The budget counts cost before credits** (`include_credit = false`). While the Free Tier credits pay the bill, the net cost is 0 USD. A budget on net cost would stay silent until the credits are gone, and on the free plan the account closes then.
 - **The topic is not encrypted.** AWS Budgets needs extra KMS key policy permissions to publish to an encrypted topic ([AWS docs](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-sns-policy.html)), and the policy of the AWS-managed SNS key cannot be changed. A customer managed key would cost about 1 USD per month. The alerts carry cost data only.
 - **No account ID or email address is committed** ([ADR-0012](../../../docs/adr/0012-git-workflow-and-ci-cd.md)). The account ID is read at run time with `aws_caller_identity`. The email address comes from `private.auto.tfvars`, which git ignores.
+- **The CI roles trust exact OIDC subjects.** This repository uses GitHub's immutable subject format, `repo:tybuszesDev@58275357/talktally@1447250076:…`, which contains the owner and repository IDs. A recycled owner or repository name cannot produce it. The plan role trusts `…:pull_request`. The deploy role trusts only `…:environment:dev` and `…:environment:prod`, so jobs without an environment cannot deploy, even on `main`.
+- **The deploy role cannot change its own access.** It cannot touch the OIDC provider, the CI roles, IAM users or access keys. Every role it creates must carry `talktally-workload-boundary`. The role and the boundary both deny:
+  - account, billing and cost changes, including Budgets, Cost Anomaly Detection, the Free Tier plan and Identity Center;
+  - changes to the state bucket configuration and deleting old state versions;
+  - changes to the alerts topic.
+
+  So a role the deploy role creates cannot get around these limits either.
+- **CI cannot change these roles.** Terraform owns their policies exclusively: a policy added by hand is removed on the next apply. Changes go through this stack, applied locally.
 
 ## Prerequisites
 
@@ -42,6 +54,51 @@ Tests use a mocked AWS provider. They create nothing and need no credentials:
 terraform init -backend=false   # only if the directory is not initialized yet
 terraform test
 ```
+
+## GitHub access
+
+The workflow `.github/workflows/terraform.yml` assumes the roles. It needs two GitHub environments and the role ARNs as secrets. Secrets are masked in the logs, so the account ID stays private. Run these commands once after the roles exist, from this directory, with the `gh` CLI signed in as the owner.
+
+1. Create the environments ([REST API: environments](https://docs.github.com/en/rest/deployments/environments), [deployment branch policies](https://docs.github.com/en/rest/deployments/branch-policies)):
+
+   - `dev`: only `main` may deploy;
+   - `prod`: `main` and release tags `v*` may deploy, and the owner approves every job. Self-review stays allowed, because the owner is the only reviewer.
+
+   ```sh
+   repo=tybuszesDev/talktally
+
+   gh api -X PUT "repos/$repo/environments/dev" --input - <<'EOF'
+   {"deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+   EOF
+   gh api -X POST "repos/$repo/environments/dev/deployment-branch-policies" -f name=main -f type=branch
+
+   owner_id="$(gh api user --jq .id)"
+   gh api -X PUT "repos/$repo/environments/prod" --input - <<EOF
+   {"reviewers": [{"type": "User", "id": $owner_id}], "prevent_self_review": false,
+    "deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+   EOF
+   gh api -X POST "repos/$repo/environments/prod/deployment-branch-policies" -f name=main -f type=branch
+   gh api -X POST "repos/$repo/environments/prod/deployment-branch-policies" -f name='v*' -f type=tag
+   ```
+
+2. Store the role ARNs as secrets. The values go straight from Terraform to GitHub and are never printed:
+
+   ```sh
+   terraform output -raw ci_plan_role_arn | gh secret set AWS_PLAN_ROLE_ARN --repo "$repo"
+   terraform output -raw ci_deploy_role_arn | gh secret set AWS_DEPLOY_ROLE_ARN --repo "$repo" --env dev
+   terraform output -raw ci_deploy_role_arn | gh secret set AWS_DEPLOY_ROLE_ARN --repo "$repo" --env prod
+   ```
+
+3. Check that no access keys exist in the account. Expect `0` from the first command and no output from the loop:
+
+   ```sh
+   aws iam get-account-summary --query 'SummaryMap.AccountAccessKeysPresent'
+   for user in $(aws iam list-users --query 'Users[].UserName' --output text); do
+     aws iam list-access-keys --user-name "$user" --query 'AccessKeyMetadata[].AccessKeyId' --output text
+   done
+   ```
+
+The next pull request that changes `infra/terraform/` runs the job "AWS plan role". After the merge, the job "AWS deploy role" runs in the `dev` environment.
 
 ## First apply on a new account
 
@@ -83,6 +140,8 @@ The state bucket is created by this stack, so the first apply uses local state. 
    rm terraform.tfstate terraform.tfstate.backup
    terraform plan   # expect "No changes"
    ```
+
+7. Set up the environments and secrets in GitHub, as described in [GitHub access](#github-access).
 
 ## Free plan
 
