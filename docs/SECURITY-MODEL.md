@@ -72,10 +72,15 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 - One IAM role per Lambda with least privilege; no wildcard actions on data resources.
 - CI roles split into read-only `plan` and `deploy` (ADR-0027). The role ARNs are GitHub secrets, so the account ID stays out of the public logs.
-  - `plan` has `ReadOnlyAccess` minus reads of user data: S3 objects outside the state bucket, DynamoDB items, log events, Step Functions executions and Cognito users. Pull request jobs may run code from dependency updates. Its only write is the Terraform lock file.
+  - `plan` has `ReadOnlyAccess` minus reads of user data: S3 objects outside the state bucket, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results and Cognito users. Pull request jobs may run code from dependency updates. Its only write is the lock file of an environment stack.
   - `deploy` has `PowerUserAccess`, plus IAM only for `talktally-dev-*` and `talktally-prod-*` roles and policies. Each such role must carry the `talktally-workload-boundary` permissions boundary, which excludes IAM, Organizations and account actions.
-  - The deploy role and the boundary both deny account, billing and cost changes, state bucket configuration changes, deleting old state versions, and alerts topic changes.
+  - The deploy role and the boundary both deny:
+    - account, billing and cost changes;
+    - state bucket configuration changes and deleting old state versions;
+    - any access to the bootstrap state;
+    - changes to the alerts topic and its subscriptions.
   - So CI cannot create users or access keys, change its own trust or the OIDC provider, enroll the account in Organizations, or weaken the cost alerts.
+- CI never reads or writes the bootstrap state. A changed state could make the owner's next local `terraform init` install a foreign provider, which `plan` would run with administrator credentials. The owner also runs `terraform init -lockfile=readonly` for the bootstrap stack, so a provider missing from the committed lock file stops the init (ADR-0027).
 - Dependency install scripts run only for an allowlist; new package versions wait 3 days before use, both in pnpm and in Renovate, which proposes the updates; security updates come right away (ADR-0017).
 
 ### AI-specific: prompt injection

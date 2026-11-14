@@ -9,7 +9,7 @@ Account-level resources that every other stack depends on. They are applied once
 | AWS Budgets `talktally-monthly` | 10 USD per month ([ADR-0002](../../../docs/adr/0002-serverless-aws-and-cost-guardrails.md)). It alerts at 50% and 100% of actual cost and at 100% of forecast cost. |
 | Cost Anomaly Detection | The AWS services monitor (`Default-Services-Monitor`, adopted by import) and the subscription `talktally-anomalies`. It sends individual alerts for anomalies of 1 USD or more. |
 | IAM OIDC provider `token.actions.githubusercontent.com` | Lets GitHub Actions assume IAM roles with short-lived tokens, so no AWS keys are stored ([ADR-0027](../../../docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md)). |
-| IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data (S3 objects outside the state bucket, DynamoDB items, log events, Step Functions executions, Cognito users). It may write only `*.tflock` lock files in the state bucket. |
+| IAM role `talktally-ci-plan` | For pull request jobs of this repository. `ReadOnlyAccess`, minus reads of user data: S3 objects outside the state bucket, the bootstrap state, DynamoDB items, log events, X-Ray traces, SQS messages, Step Functions executions, Transcribe results and Cognito users. It may write only the lock files of the environment stacks (`envs/*.tflock`). |
 | IAM role `talktally-ci-deploy` | For jobs in the `dev` and `prod` GitHub environments. `PowerUserAccess`, plus IAM for roles and policies named `talktally-dev-*` and `talktally-prod-*`. Each such role must carry the boundary below. |
 | IAM policy `talktally-workload-boundary` | Permissions boundary of every role the deploy role creates: no IAM, Organizations or account actions. |
 
@@ -22,10 +22,12 @@ Design notes:
 - **The deploy role cannot change its own access.** It cannot touch the OIDC provider, the CI roles, IAM users or access keys. Every role it creates must carry `talktally-workload-boundary`. The role and the boundary both deny:
   - account, billing and cost changes, including Budgets, Cost Anomaly Detection, the Free Tier plan and Identity Center;
   - changes to the state bucket configuration and deleting old state versions;
-  - changes to the alerts topic.
+  - any access to the bootstrap state (`bootstrap/*`);
+  - changes to the alerts topic and its subscriptions.
 
   So a role the deploy role creates cannot get around these limits either.
 - **CI cannot change these roles.** Terraform owns their policies exclusively: a policy added by hand is removed on the next apply. Changes go through this stack, applied locally.
+- **CI never touches this stack's state.** Terraform also installs providers that only the state names ([dependency lock file](https://developer.hashicorp.com/terraform/language/files/dependency-lock)). A changed bootstrap state could therefore run foreign code with the owner's administrator session. Both CI roles are denied the `bootstrap/` keys. The environment stacks find bootstrap resources by name, and the everyday commands below use `-lockfile=readonly`.
 
 ## Prerequisites
 
@@ -43,10 +45,12 @@ Design notes:
 
 ```sh
 cd infra/terraform/bootstrap
-terraform init
+terraform init -lockfile=readonly
 terraform plan -out=bootstrap.tfplan
 terraform apply bootstrap.tfplan
 ```
+
+`-lockfile=readonly` stops `init` with "Provider dependency changes detected" when the configuration or the state needs a provider that is not in the committed `.terraform.lock.hcl`. Do not continue then: check the state and the change first. Plain `terraform init` is only for a deliberate provider upgrade, and the changed lock file is reviewed in the pull request.
 
 Tests use a mocked AWS provider. They create nothing and need no credentials:
 

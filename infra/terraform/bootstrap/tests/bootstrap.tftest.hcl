@@ -236,8 +236,16 @@ run "plan_role_reads_infrastructure_but_not_user_data" {
   }
 
   assert {
-    condition     = one(jsondecode(aws_iam_role_policy.ci_plan_state_lock.policy).Statement).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/*.tflock"
-    error_message = "The plan role may write only lock files in the state bucket."
+    condition     = one(jsondecode(aws_iam_role_policy.ci_plan_state_lock.policy).Statement).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/envs/*.tflock"
+    error_message = "The plan role may write only lock files of the environment stacks."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s
+      if s.Sid == "DenyBootstrapStateReads" && s.Effect == "Deny" && contains(s.Action, "s3:GetObject")
+    ]).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/bootstrap/*"
+    error_message = "The plan role must not read the bootstrap state, which holds the alert email address."
   }
 
   assert {
@@ -262,7 +270,10 @@ run "plan_role_reads_infrastructure_but_not_user_data" {
         "dynamodb:Scan",
         "logs:GetLogEvents",
         "logs:FilterLogEvents",
+        "sqs:ReceiveMessage",
         "states:GetExecutionHistory",
+        "transcribe:GetTranscriptionJob",
+        "xray:BatchGetTraces",
       ],
       one([
         for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s.Action
@@ -388,10 +399,29 @@ run "boundary_and_guards_protect_identity_billing_and_bootstrap" {
   assert {
     condition = alltrue([
       for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement :
-      s.Resource == aws_sns_topic.alerts.arn && length(setsubtract(["sns:DeleteTopic", "sns:SetTopicAttributes", "sns:Subscribe"], s.Action)) == 0
+      s.Resource == aws_sns_topic.alerts.arn && length(setsubtract(["sns:DeleteTopic", "sns:SetSubscriptionAttributes", "sns:SetTopicAttributes", "sns:Subscribe"], s.Action)) == 0
       if s.Sid == "DenyAlertsTopicChanges"
     ])
-    error_message = "The guards must protect the alerts topic."
+    error_message = "The guards must protect the alerts topic and its subscriptions."
+  }
+
+  assert {
+    condition = one([
+      for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s
+      if s.Sid == "DenyBootstrapStateAccess"
+    ]).Resource == "arn:aws:s3:::talktally-tfstate-3af2cc3e/bootstrap/*"
+    error_message = "The guards must cover the bootstrap state."
+  }
+
+  assert {
+    condition = length(setsubtract(
+      ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ReplicateObject"],
+      one([
+        for s in jsondecode(aws_iam_role_policy.ci_deploy_bootstrap_guards.policy).Statement : s.Action
+        if s.Sid == "DenyBootstrapStateAccess"
+      ]),
+    )) == 0
+    error_message = "CI must not read, write, delete or replicate into the bootstrap state."
   }
 }
 

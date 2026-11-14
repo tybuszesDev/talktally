@@ -66,6 +66,19 @@ jobs:
             *) echo "::error::Unexpected error: $output"; exit 1 ;;
           esac
 
+      # The bootstrap state holds the owner's alert email address, so CI must not read it.
+      # HeadObject needs s3:GetObject; S3 answers a denied HEAD request with 403 Forbidden.
+      - name: Check that the role cannot read the bootstrap state
+        run: |
+          if output="$(aws s3api head-object --bucket "$STATE_BUCKET" --key bootstrap/terraform.tfstate 2>&1)"; then
+            echo "::error::The plan role could read the bootstrap state."
+            exit 1
+          fi
+          case "$output" in
+            *"(403)"*) echo "Read denied, as expected." ;;
+            *) echo "::error::Unexpected error: $output"; exit 1 ;;
+          esac
+
   deploy-access:
     name: AWS deploy role
     if: ${{ github.event_name == 'push' }}

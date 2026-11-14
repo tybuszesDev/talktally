@@ -41,12 +41,14 @@ Jobs without an environment (Scorecard, CodeQL, release) cannot assume the deplo
 **Plan role permissions:**
 
 - the AWS managed policy `ReadOnlyAccess`;
-- write access only to `*.tflock` objects in the state bucket, for S3 state locking;
+- write access only to the lock files of the environment stacks (`envs/*.tflock`), for S3 state locking;
 - an explicit deny on reading user data:
-  - S3 objects outside the state bucket;
+  - S3 objects outside the state bucket, and the bootstrap state, which holds the owner's alert email address;
   - DynamoDB items and stream records;
-  - CloudWatch Logs events and queries;
+  - CloudWatch Logs events and queries, and X-Ray traces;
+  - SQS messages;
   - Step Functions execution input and history;
+  - Transcribe job results;
   - Cognito user records.
 
 **Deploy role permissions:**
@@ -60,7 +62,10 @@ Jobs without an environment (Scorecard, CodeQL, release) cannot assume the deplo
 - account, billing and cost services: Budgets, Cost Explorer and Cost Anomaly Detection, Free Tier plan changes, payments and Identity Center;
 - changes to the state bucket configuration;
 - deleting old state versions;
-- changes to the alerts topic.
+- any access to the bootstrap state (`bootstrap/*`): reads, writes, deletes, restores and replication;
+- changes to the alerts topic and its subscriptions.
+
+**CI never touches the bootstrap state.** The owner applies the bootstrap stack locally with administrator credentials. Terraform takes provider requirements from both the configuration and the state ([dependency lock file](https://developer.hashicorp.com/terraform/language/files/dependency-lock)). A changed bootstrap state could name a foreign provider, which the owner's next `terraform init` would install and `terraform plan` would run with administrator credentials. The environment stacks therefore read bootstrap values through data sources, never through `terraform_remote_state`. As a second line of defence, the owner runs `terraform init -lockfile=readonly` for the bootstrap stack. It fails with "Provider dependency changes detected" when a provider is missing from the committed lock file.
 
 Because of these denies, the deploy role cannot:
 
@@ -78,7 +83,8 @@ Because of these denies, the deploy role cannot:
 ## Consequences
 
 - One deploy role serves both environments, so a dev job has the same AWS permissions as a prod job. The prod approval controls when prod changes, not what a dev job could do. Separate AWS accounts per environment (an alternative in ADR-0003) would close this gap.
-- Every workload role needs the boundary and the environment prefix in its name, or the apply fails with `AccessDenied`. The bootstrap stack outputs the boundary ARN for the environment stacks.
+- Every workload role needs the boundary and the environment prefix in its name, or the apply fails with `AccessDenied`. The environment stacks find the boundary policy, the alerts topic and the state bucket by name, because they cannot read the bootstrap state.
+- The state keys of the environment stacks start with `envs/`, because the plan role may lock only those keys.
 - The plan role's deny list can block the refresh of a resource whose read is a data read. For example, a Cognito user managed in Terraform needs `AdminGetUser`. Such a change updates the list in the bootstrap stack and in SECURITY-MODEL.
 - `ReadOnlyAccess` includes `ssm:GetParameter*`. The feature that adds the first SecureString parameter also adds it to the deny list.
 - CI cannot change its own permissions. Every change to the CI roles is applied locally by the owner (ADR-0003).

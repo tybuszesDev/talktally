@@ -72,13 +72,34 @@ locals {
       Resource = "${aws_s3_bucket.state.arn}/*"
     },
     {
+      # CI never touches the bootstrap state. A changed state could name a
+      # foreign provider, which the owner's next local init would install and
+      # plan would run with administrator credentials.
+      Sid    = "DenyBootstrapStateAccess"
+      Effect = "Deny"
+      Action = [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:PutObject",
+        "s3:ReplicateDelete",
+        "s3:ReplicateObject",
+        "s3:RestoreObject",
+      ]
+      Resource = "${aws_s3_bucket.state.arn}/bootstrap/*"
+    },
+    {
+      # Subscription changes include filter policies that would silently drop
+      # the owner's alerts.
       Sid    = "DenyAlertsTopicChanges"
       Effect = "Deny"
       Action = [
         "sns:AddPermission",
+        "sns:ConfirmSubscription",
         "sns:DeleteTopic",
         "sns:PutDataProtectionPolicy",
         "sns:RemovePermission",
+        "sns:SetSubscriptionAttributes",
         "sns:SetTopicAttributes",
         "sns:Subscribe",
         "sns:Unsubscribe",
@@ -128,7 +149,7 @@ resource "aws_iam_role_policy_attachments_exclusive" "ci_plan" {
 }
 
 # terraform plan takes the S3 state lock (use_lockfile), so the role may write
-# and delete lock files, and nothing else.
+# and delete the lock files of the environment stacks, and nothing else.
 resource "aws_iam_role_policy" "ci_plan_state_lock" {
   name = "state-lock"
   role = aws_iam_role.ci_plan.name
@@ -137,10 +158,10 @@ resource "aws_iam_role_policy" "ci_plan_state_lock" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "WriteStateLockFiles"
+        Sid      = "WriteEnvironmentStateLockFiles"
         Effect   = "Allow"
         Action   = ["s3:PutObject", "s3:DeleteObject"]
-        Resource = "${aws_s3_bucket.state.arn}/*.tflock"
+        Resource = "${aws_s3_bucket.state.arn}/envs/*.tflock"
       },
     ]
   })
@@ -161,6 +182,14 @@ resource "aws_iam_role_policy" "ci_plan_deny_user_data" {
         Effect      = "Deny"
         Action      = ["s3:GetObject", "s3:GetObjectVersion"]
         NotResource = "${aws_s3_bucket.state.arn}/*"
+      },
+      {
+        # The bootstrap state holds the owner's alert email address. The
+        # environment stacks read bootstrap values through data sources.
+        Sid      = "DenyBootstrapStateReads"
+        Effect   = "Deny"
+        Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+        Resource = "${aws_s3_bucket.state.arn}/bootstrap/*"
       },
       {
         Sid    = "DenyUserDataReads"
@@ -184,8 +213,12 @@ resource "aws_iam_role_policy" "ci_plan_deny_user_data" {
           "logs:GetQueryResults",
           "logs:StartLiveTail",
           "logs:StartQuery",
+          "sqs:ReceiveMessage",
           "states:DescribeExecution",
           "states:GetExecutionHistory",
+          "transcribe:GetTranscriptionJob",
+          "xray:BatchGetTraces",
+          "xray:GetTraceSummaries",
         ]
         Resource = "*"
       },
