@@ -300,7 +300,15 @@ run "plan_role_reads_infrastructure_but_not_user_data" {
 
   assert {
     condition = length(setsubtract(
-      ["account:GetContactInformation", "account:GetPrimaryEmail", "cloudtrail:LookupEvents", "sns:ListSubscriptions", "sns:ListSubscriptionsByTopic"],
+      [
+        "account:GetAlternateContact",
+        "account:GetContactInformation",
+        "account:GetPrimaryEmail",
+        "cloudtrail:GetQueryResults",
+        "cloudtrail:LookupEvents",
+        "sns:ListSubscriptions",
+        "sns:ListSubscriptionsByTopic",
+      ],
       one([
         for s in jsondecode(aws_iam_role_policy.ci_plan_deny_user_data.policy).Statement : s.Action
         if s.Sid == "DenyOwnerContactReads" && s.Effect == "Deny" && s.Resource == "*"
