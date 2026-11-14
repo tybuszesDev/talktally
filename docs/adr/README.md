@@ -12,7 +12,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 |---|---|---|
 | [0001](0001-monorepo-pnpm-turborepo.md) | Monorepo with pnpm workspaces and Turborepo | Accepted |
 | [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted |
-| [0003](0003-terraform-infrastructure-as-code.md) | Terraform for all infrastructure | Accepted |
+| [0003](0003-terraform-infrastructure-as-code.md) | Terraform for all infrastructure | Accepted, amended by 0027 |
 | [0004](0004-authentication-with-cognito.md) | Authentication with Amazon Cognito | Accepted |
 | [0005](0005-graphql-api-with-appsync.md) | GraphQL API with AWS AppSync | Accepted, amended by 0018 |
 | [0006](0006-dynamodb-single-table.md) | DynamoDB single-table data store | Accepted |
@@ -21,7 +21,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0009](0009-templates-over-fixed-domain-primitives.md) | Templates configure fixed domain primitives | Accepted |
 | [0010](0010-client-applications.md) | Client applications: Vite SPA, Expo, Electron later | Accepted |
 | [0011](0011-testing-strategy-and-quality-gates.md) | Testing strategy and quality gates | Accepted |
-| [0012](0012-git-workflow-and-ci-cd.md) | Git workflow and CI/CD | Accepted, amended by 0019 |
+| [0012](0012-git-workflow-and-ci-cd.md) | Git workflow and CI/CD | Accepted, amended by 0019 and 0027 |
 | [0013](0013-event-bus-for-domain-events-and-integrations.md) | Event bus for domain events and future integrations | Accepted |
 | [0014](0014-mobile-distribution-and-device-testing.md) | Mobile distribution and device testing | Accepted |
 | [0015](0015-observability.md) | Observability | Accepted |
@@ -36,6 +36,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0024](0024-documentation-first-and-session-per-feature.md) | Documentation first and one session per feature | Accepted |
 | [0025](0025-release-please-with-a-github-app-token.md) | release-please with a GitHub App token | Accepted |
 | [0026](0026-admin-access-with-iam-user-and-aws-login.md) | Administrator access with an IAM user and `aws login` | Accepted |
+| [0027](0027-ci-access-to-aws-with-github-oidc-roles.md) | CI access to AWS with GitHub OIDC roles | Accepted |
 
 ## Template
 
