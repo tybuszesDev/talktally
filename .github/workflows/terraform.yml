@@ -321,7 +321,7 @@ jobs:
           fi
           failed="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")"
           if [ -n "$failed" ]; then
-            echo "::error::Some Terraform jobs did not succeed. A pull request from a fork gets no plan: push its branch to this repository."
+            echo "::error::Some Terraform jobs did not succeed. See their logs. A skipped plan means a pull request from a fork: push its branch to this repository."
             echo "$failed"
             exit 1
           fi
