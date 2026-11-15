@@ -107,7 +107,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0014](docs/adr/0014-mobile-distribution-and-device-testing.md) | EAS Build and Submit to TestFlight; Appium tests by `testID` on simulators nightly and on AWS Device Farm for releases. |
 | [0015](docs/adr/0015-observability.md) | Powertools for Lambda (structured logs, traces, metrics), correlation IDs, SLOs, alarms by email, no user content in logs. |
 | [0016](docs/adr/0016-release-management-and-work-traceability.md) | GitHub Issues, milestones and a project board; release-please creates one product version and changelog; `0.x` until the MVP. |
-| [0017](docs/adr/0017-code-quality-security-and-cost-checks.md) | Required CI checks: strict lint, dependency-cruiser, knip, CodeQL, gitleaks, trivy, Renovate, Scorecard, Infracost, accessibility lint and axe. |
+| [0017](docs/adr/0017-code-quality-security-and-cost-checks.md) | Required CI checks: strict lint, dependency-cruiser, knip, CodeQL, gitleaks, trivy, Renovate, Scorecard, accessibility lint and axe; costs watched in AWS instead of Infracost (ADR-0029). |
 | [0018](docs/adr/0018-change-notifications-through-the-event-bus.md) | Clients learn about changes through Streams → Pipes → bus → AppSync `publishChange` signals and refetch; at-least-once delivery. |
 | [0019](docs/adr/0019-feature-size-and-splitting.md) | Commit and push the branch daily; a feature longer than about two days is split into `F-xxa`, `F-xxb` pull requests as sub-issues. |
 | [0020](docs/adr/0020-schema-evolution-and-backward-compatibility.md) | Breaking changes follow expand → migrate → contract; the GraphQL schema only grows within a release; items carry `schemaVersion`. |
@@ -119,7 +119,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md) | Daily admin access is an IAM user with passkey MFA and `aws login` (no access keys); no Identity Center or Organizations while on the free plan, so the credits stay. |
 | [0027](docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md) | CI roles trust the immutable OIDC subject: `plan` for pull requests (ReadOnlyAccess minus user data), `deploy` only for the `dev` and `prod` environments (PowerUserAccess, workload IAM roles need the `talktally-workload-boundary` boundary). |
 | [0028](docs/adr/0028-route-53-zone-for-the-app-subdomain.md) | Hostinger only registers `tybu.me`; Route 53 zones `tybu.me` (delegation only) and `talktally.tybu.me` live in the bootstrap stack with `prevent_destroy`; CI cannot touch the `tybu.me` zone, delete the app zone, change its DNSSEC or its NS/SOA records. |
-| [0029](docs/adr/0029-terraform-pipeline-in-github-actions.md) | One Terraform workflow on every PR; required check `Terraform` sums fmt, validate, test, TFLint, Trivy (image by digest), a masked dev plan comment and Infracost CI v2; merge applies dev with a fresh plan; prod only static checks until F-65. |
+| [0029](docs/adr/0029-terraform-pipeline-in-github-actions.md) | One Terraform workflow on every PR; required check `Terraform` sums fmt, validate, test, TFLint, Trivy (image by digest) and a masked dev plan comment; merge applies dev with a fresh plan; prod only static checks until F-65; no third-party cost tool, costs watched by AWS Budgets and Cost Anomaly Detection. |
 
 ## Owner actions
 

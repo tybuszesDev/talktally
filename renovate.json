@@ -67,14 +67,14 @@
       ]
     },
     {
-      "description": "The Trivy and Infracost CI images of the Terraform workflow come from GHCR too, which gives no release timestamps. Each update waits for approval in the Dependency Dashboard, like the gitleaks image.",
+      "description": "The Trivy image of the Terraform workflow comes from GHCR too, which gives no release timestamps. Each update waits for approval in the Dependency Dashboard, like the gitleaks image.",
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/aquasecurity/trivy", "ghcr.io/infracost/ci"],
-      "groupName": "Terraform pipeline images",
+      "matchPackageNames": ["ghcr.io/aquasecurity/trivy"],
+      "groupName": "Trivy image",
       "dependencyDashboardApproval": true,
       "minimumReleaseAgeBehaviour": "timestamp-optional",
       "prBodyNotes": [
-        "Approved by hand because GHCR has no release dates: the new digest in this pull request must have been published at least 3 days ago. Check the digest itself on the GHCR versions page of [Trivy](https://github.com/aquasecurity/trivy/pkgs/container/trivy/versions?filters%5Bversion_type%5D=tagged) or [Infracost CI](https://github.com/infracost/ci/pkgs/container/ci/versions?filters%5Bversion_type%5D=tagged) (\"Published ... · Digest\")."
+        "Approved by hand because GHCR has no release dates: the new digest in this pull request must have been published at least 3 days ago. Check the digest itself on the [GHCR versions page](https://github.com/aquasecurity/trivy/pkgs/container/trivy/versions?filters%5Bversion_type%5D=tagged) (\"Published ... · Digest\"). After the merge, update the local Trivy (`brew upgrade trivy`)."
       ]
     },
     {

@@ -18,7 +18,7 @@ Today each environment holds one resource: the resource group `talktally-<env>-r
 - **IAM roles** set `permissions_boundary` to the policy `talktally-workload-boundary`, found by name.
 - **Bootstrap resources** (state bucket, alerts topic, boundary policy, app zone) are found with data sources by name, never with `terraform_remote_state`: CI must not read the bootstrap state.
 - **Secret values** never enter state: create them outside Terraform or use write-only arguments such as `value_wo`.
-- **Cost:** a new paid service needs an ADR ([ADR-0002](../../docs/adr/0002-serverless-aws-and-cost-guardrails.md)); the Infracost comment shows the difference.
+- **Cost:** only pay-per-request or free services; a new paid service needs an ADR ([ADR-0002](../../docs/adr/0002-serverless-aws-and-cost-guardrails.md)). Check the plan for new resource types before the merge. After the apply, AWS Budgets and Cost Anomaly Detection alert on any rise ([bootstrap README](bootstrap/README.md)).
 
 ## Pull requests and merges
 
@@ -26,7 +26,6 @@ The workflow [`terraform.yml`](../../.github/workflows/terraform.yml) runs on ev
 
 - **Terraform checks:** `terraform fmt -check`, Trivy, then `init`, `validate` and `test` in every directory with a `.terraform.lock.hcl`, then TFLint. No AWS credentials.
 - **Plan dev:** a plan with the read-only plan role. The comment "Terraform plan: dev" shows it, with the account ID replaced by `<account-id>`.
-- **Infracost:** the comment with the monthly cost difference.
 - **Terraform:** the required check. It passes when nothing under `infra/terraform/` changed, and otherwise only when every job above succeeded.
 
 After the merge, the job "Apply dev" plans `main` again and applies it with the deploy role, in the GitHub environment `dev`.
@@ -58,18 +57,6 @@ Each root module has its own `.terraform.lock.hcl` with checksums for macOS (`da
 terraform -chdir=infra/terraform/envs/dev init -backend=false -upgrade
 terraform -chdir=infra/terraform/envs/dev providers lock -platform=darwin_arm64 -platform=linux_amd64
 ```
-
-## Infracost
-
-The job "Infracost" runs [Infracost CI](https://github.com/infracost/ci). It reads the Terraform code of the base and head commits, needs no AWS credentials, and posts the cost comment. It uploads the estimate and the pull request metadata (title, author, branch, commit) to Infracost Cloud. One-time setup by the owner:
-
-1. Sign up at [dashboard.infracost.io](https://dashboard.infracost.io). The free CI/CD plan allows 1000 runs per month.
-2. Create a token: Organization settings → CLI tokens → **Create CLI v2 tokens**. An older v0.1 API key (`ico-…`) does not work.
-3. Store it as a repository secret. `gh` asks for the value, so it does not end up in the shell history:
-
-   ```sh
-   gh secret set INFRACOST_CLI_AUTHENTICATION_TOKEN --repo tybuszesDev/talktally
-   ```
 
 ## Planning dev locally
 

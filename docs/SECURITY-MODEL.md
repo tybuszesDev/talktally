@@ -45,7 +45,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Change sets are validated with Zod; referenced IDs are checked against the caller's project; DynamoDB writes use condition expressions and versions.
 - Branch protection, required checks and actions pinned by commit SHA protect the pipeline.
 - CodeQL scans the code and the workflows on every pull request; new high or critical security alerts block the merge. OpenSSF Scorecard rates the repository settings weekly (ADR-0017).
-- Trivy and Infracost CI run from their official images pinned by digest, not through `aquasecurity/trivy-action`, whose tags an attacker rewrote in March 2026. Their updates wait for the owner's approval (ADR-0029).
+- Trivy runs from its official image pinned by digest, not through `aquasecurity/trivy-action`, whose tags an attacker rewrote in March 2026. Its updates wait for the owner's approval (ADR-0029).
 - The Terraform lock files are committed and CI runs `terraform init -lockfile=readonly`, so CI installs only providers whose checksums were reviewed (ADR-0029).
 
 ### Repudiation
@@ -60,9 +60,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Encryption at rest everywhere (AWS-managed keys) and TLS in transit. One exception: the `talktally-alerts` SNS topic is not encrypted at rest. AWS Budgets cannot publish to a topic encrypted with the AWS-managed key, and a customer managed key would cost about 1 USD per month. The topic carries cost alerts only, never user content ([bootstrap README](../infra/terraform/bootstrap/README.md)).
 - Logs and Sentry events never contain transcripts, audio URLs or tokens (ADR-0015).
 - gitleaks scans staged changes before each commit and every pushed commit in CI; GitHub secret scanning with push protection is enabled.
-- Terraform plan comments and their artifacts are public. The plan job replaces the account ID with `<account-id>` before the text leaves the job, because GitHub masks it only in logs. The binary plan never leaves the runner (ADR-0029).
-- Infracost Cloud receives cost estimates and pull request metadata (title, author, branch, commit), never the plan, state or AWS credentials (ADR-0029).
-- According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
+- Terraform plan comments and their artifacts are public. The plan job replaces the account ID with `<account-id>` before the text leaves the job, because GitHub masks it only in logs. The binary plan never leaves the runner (ADR-0029).- According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
 
 ### Denial of service and denial of wallet
 

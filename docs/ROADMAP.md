@@ -40,7 +40,6 @@ Things only the owner can do. Check this list before starting each feature.
 | F-10 | Install Terraform and the AWS CLI (2.32.0 or later). Create an IAM administrator user with passkey MFA and sign in with `aws login`, so the root account is never used for daily work ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | Before the free plan ends | Upgrade the AWS account to the paid plan by hand in the Billing console, so the account does not close ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | F-12 | Set the name servers of `tybu.me` in hPanel to the four name servers of the Route 53 zone `tybu.me` ([bootstrap README](../infra/terraform/bootstrap/README.md#dns-delegation)) |
-| F-13 | Create a free Infracost account and store a CLI v2 token as the repository secret `INFRACOST_CLI_AUTHENTICATION_TOKEN` ([infra/terraform README](../infra/terraform/README.md#infracost)) |
 | Before 2027-05-21 | Keep automatic renewal of `tybu.me` on at Hostinger. The app's host names depend on it ([ADR-0028](adr/0028-route-53-zone-for-the-app-subdomain.md)) |
 | F-14 | Record 3 real renovation dictations (1–3 minutes each). Enable Bedrock model access for Anthropic models |
 | F-24 | Active Apple Developer Program membership; free Expo account |
@@ -68,7 +67,7 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 | F-10 | `feat(infra): add bootstrap stack with state, budgets and alerts` | State bucket with native locking; AWS Budgets (10 USD) and Cost Anomaly Detection email alerts; SNS alerts topic; applied locally and documented |
 | F-11 | `feat(infra): add GitHub OIDC roles` | `plan` role trusted only by pull requests of this repository; `deploy` role trusted only by the `dev` and `prod` environments, which accept only `main` (and release tags for prod); no access keys exist ([ADR-0027](adr/0027-ci-access-to-aws-with-github-oidc-roles.md)) |
 | F-12 | `feat(infra): add Route 53 zone for talktally.tybu.me` | Zones `tybu.me` and `talktally.tybu.me` created; `tybu.me` uses the Route 53 name servers at Hostinger; `dig` resolves a test record |
-| F-13 | `ci: add Terraform pipeline for the dev environment` | Root modules `envs/dev` and `envs/prod` with tagging; PRs show fmt, validate, tflint, trivy, `terraform test`, plan and Infracost comments; merge applies dev |
+| F-13 | `ci: add Terraform pipeline for the dev environment` | Root modules `envs/dev` and `envs/prod` with tagging; PRs show fmt, validate, tflint, trivy, `terraform test` and a plan comment; merge applies dev; costs watched in AWS ([ADR-0029](adr/0029-terraform-pipeline-in-github-actions.md)) |
 | F-14 | `docs: record Bedrock and Transcribe spike results` | Bedrock access to Claude Opus 5.5 confirmed from `eu-central-1`; account plan type checked; Transcribe `pl-PL` quality tested on 3 real renovation dictations; results and costs written down |
 
 ## M2 Walking skeleton

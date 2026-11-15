@@ -2,11 +2,12 @@
 # through OIDC; no AWS keys are stored. The role ARNs are secrets, so the account ID stays out
 # of the public logs. Setup: infra/terraform/bootstrap/README.md, "GitHub access".
 #
-# Pull requests: static checks of every root module (fmt, validate, test, TFLint, Trivy), a plan
-# of dev with the read-only plan role, posted as a comment, and an Infracost cost comment. The
-# job "Terraform" sums them up and is the required check. The workflow therefore runs on every
-# pull request and its jobs skip when nothing under infra/terraform changed: a required check
-# of a workflow that a paths filter skipped would stay pending forever.
+# Pull requests: static checks of every root module (fmt, validate, test, TFLint, Trivy) and a
+# plan of dev with the read-only plan role, posted as a comment. The job "Terraform" sums them
+# up and is the required check. The workflow therefore runs on every pull request and its jobs
+# skip when nothing under infra/terraform changed: a required check of a workflow that a paths
+# filter skipped would stay pending forever. Costs are watched in AWS (Budgets, Cost Anomaly
+# Detection), not by a third-party estimate (ADR-0029).
 #
 # Pushes to main: a fresh plan of dev, applied with the deploy role in the dev environment.
 # prod gets its plan and its approved apply in F-65.
@@ -47,11 +48,12 @@ jobs:
       terraform: ${{ steps.files.outputs.terraform }}
     steps:
       # The file list is read first: grep -q in a pipe would end it early, and pipefail would
-      # turn the broken pipe into a failure.
+      # turn the broken pipe into a failure. A renamed file counts with its old path too, so
+      # moving a file out of infra/terraform is a Terraform change.
       - name: Check the changed files
         id: files
         run: |
-          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')"
+          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')"
           if grep -qE '^(infra/terraform/|\.github/workflows/terraform\.yml$)' <<<"$files"; then
             echo "terraform=true" >> "$GITHUB_OUTPUT"
           else
@@ -263,48 +265,12 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
-  infracost:
-    name: Infracost
-    needs: changes
-    # Fork pull requests get no secrets; see the job "Plan dev".
-    if: needs.changes.outputs.terraform == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Infracost CI (Apache-2.0) from its official image, pinned by digest. It parses the
-    # Terraform code of both checkouts, without a plan or AWS credentials, posts or updates one
-    # cost comment, and uploads the estimate and the pull request metadata to Infracost Cloud.
-    container: ghcr.io/infracost/ci:2.1.0@sha256:93530b2c3ab09b11b5c1330a12af7fad465becb89598fb88a18ec41664a86a6c
-    permissions:
-      contents: read
-      pull-requests: write # Create or update the cost comment.
-    env:
-      # A CLI v2 token from dashboard.infracost.io (infra/terraform/README.md, "Infracost").
-      INFRACOST_CLI_AUTHENTICATION_TOKEN: ${{ secrets.INFRACOST_CLI_AUTHENTICATION_TOKEN }}
-      # infracost-ci reads the comment token from the environment.
-      GITHUB_TOKEN: ${{ github.token }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
-          persist-credentials: false
-
-      # The head commit, not the merge commit that pull_request checks out by default.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: head
-          persist-credentials: false
-
-      - name: Estimate the cost difference
-        run: infracost-ci diff --base-path base --head-path head
-
   # The required check. It passes when nothing under infra/terraform changed, and otherwise
   # only when every Terraform job succeeded.
   terraform:
     name: Terraform
     if: always() && github.event_name == 'pull_request'
-    needs: [changes, checks, plan, plan-comment, infracost]
+    needs: [changes, checks, plan, plan-comment]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
