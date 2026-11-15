@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/tybuszesDev/talktally/compare/v0.2.0...v0.3.0) (2026-11-15)
+
+
+### Features
+
+* **infra:** add Route 53 zone for talktally.tybu.me ([#89](https://github.com/tybuszesDev/talktally/issues/89)) ([515a257](https://github.com/tybuszesDev/talktally/commit/515a257f958d17f901e752d7e10eaca8173d8101))
+
 ## [0.2.0](https://github.com/tybuszesDev/talktally/compare/v0.1.0...v0.2.0) (2026-11-14)
 
 
