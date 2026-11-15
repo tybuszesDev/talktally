@@ -21,12 +21,12 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0009](0009-templates-over-fixed-domain-primitives.md) | Templates configure fixed domain primitives | Accepted |
 | [0010](0010-client-applications.md) | Client applications: Vite SPA, Expo, Electron later | Accepted |
 | [0011](0011-testing-strategy-and-quality-gates.md) | Testing strategy and quality gates | Accepted |
-| [0012](0012-git-workflow-and-ci-cd.md) | Git workflow and CI/CD | Accepted, amended by 0019 and 0027 |
+| [0012](0012-git-workflow-and-ci-cd.md) | Git workflow and CI/CD | Accepted, amended by 0019, 0027 and 0029 |
 | [0013](0013-event-bus-for-domain-events-and-integrations.md) | Event bus for domain events and future integrations | Accepted |
 | [0014](0014-mobile-distribution-and-device-testing.md) | Mobile distribution and device testing | Accepted |
 | [0015](0015-observability.md) | Observability | Accepted |
 | [0016](0016-release-management-and-work-traceability.md) | Release management and work traceability | Accepted, amended by 0025 |
-| [0017](0017-code-quality-security-and-cost-checks.md) | Code quality, security and cost checks in CI | Accepted |
+| [0017](0017-code-quality-security-and-cost-checks.md) | Code quality, security and cost checks in CI | Accepted, amended by 0029 |
 | [0018](0018-change-notifications-through-the-event-bus.md) | Change notifications through the event bus | Accepted |
 | [0019](0019-feature-size-and-splitting.md) | Feature size and splitting | Accepted |
 | [0020](0020-schema-evolution-and-backward-compatibility.md) | Schema evolution and backward compatibility | Accepted |
@@ -38,6 +38,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0026](0026-admin-access-with-iam-user-and-aws-login.md) | Administrator access with an IAM user and `aws login` | Accepted |
 | [0027](0027-ci-access-to-aws-with-github-oidc-roles.md) | CI access to AWS with GitHub OIDC roles | Accepted, amended by 0028 |
 | [0028](0028-route-53-zone-for-the-app-subdomain.md) | Route 53 zones for tybu.me and the app subdomain | Accepted |
+| [0029](0029-terraform-pipeline-in-github-actions.md) | Terraform pipeline in GitHub Actions | Accepted |
 
 ## Template
 

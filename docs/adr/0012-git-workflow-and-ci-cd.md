@@ -1,6 +1,6 @@
 # ADR-0012: Git workflow and CI/CD
 
-- Status: Accepted
+- Status: Accepted, amended by [ADR-0019](0019-feature-size-and-splitting.md), [ADR-0027](0027-ci-access-to-aws-with-github-oidc-roles.md) and [ADR-0029](0029-terraform-pipeline-in-github-actions.md)
 - Date: 2026-11-05
 
 ## Context

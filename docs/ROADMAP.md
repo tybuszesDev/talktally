@@ -40,6 +40,7 @@ Things only the owner can do. Check this list before starting each feature.
 | F-10 | Install Terraform and the AWS CLI (2.32.0 or later). Create an IAM administrator user with passkey MFA and sign in with `aws login`, so the root account is never used for daily work ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | Before the free plan ends | Upgrade the AWS account to the paid plan by hand in the Billing console, so the account does not close ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | F-12 | Set the name servers of `tybu.me` in hPanel to the four name servers of the Route 53 zone `tybu.me` ([bootstrap README](../infra/terraform/bootstrap/README.md#dns-delegation)) |
+| F-13 | Create a free Infracost account and store a CLI v2 token as the repository secret `INFRACOST_CLI_AUTHENTICATION_TOKEN` ([infra/terraform README](../infra/terraform/README.md#infracost)) |
 | Before 2027-05-21 | Keep automatic renewal of `tybu.me` on at Hostinger. The app's host names depend on it ([ADR-0028](adr/0028-route-53-zone-for-the-app-subdomain.md)) |
 | F-14 | Record 3 real renovation dictations (1–3 minutes each). Enable Bedrock model access for Anthropic models |
 | F-24 | Active Apple Developer Program membership; free Expo account |

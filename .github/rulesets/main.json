@@ -33,7 +33,8 @@
           { "context": "CI", "integration_id": 15368 },
           { "context": "PR checklist", "integration_id": 15368 },
           { "context": "PR title", "integration_id": 15368 },
-          { "context": "Secret scan", "integration_id": 15368 }
+          { "context": "Secret scan", "integration_id": 15368 },
+          { "context": "Terraform", "integration_id": 15368 }
         ]
       }
     },

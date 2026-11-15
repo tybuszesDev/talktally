@@ -82,7 +82,7 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 ## Environment
 
 - Keep the repository outside iCloud-synced folders (Desktop, Documents): iCloud adds extended attributes that break Xcode code signing.
-- Homebrew tap formulas need the Xcode Command Line Tools, not only Xcode. Local tools: `gitleaks` (brew), Terraform (`hashicorp/tap/terraform`).
+- Homebrew tap formulas need the Xcode Command Line Tools, not only Xcode. Local tools: `gitleaks` (brew), Terraform (`hashicorp/tap/terraform`), `tflint` and `trivy` (brew, for infrastructure checks).
 - The mobile app runs as a development build (`expo-dev-client`), not in Expo Go.
 
 ## Architecture decisions
@@ -119,6 +119,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md) | Daily admin access is an IAM user with passkey MFA and `aws login` (no access keys); no Identity Center or Organizations while on the free plan, so the credits stay. |
 | [0027](docs/adr/0027-ci-access-to-aws-with-github-oidc-roles.md) | CI roles trust the immutable OIDC subject: `plan` for pull requests (ReadOnlyAccess minus user data), `deploy` only for the `dev` and `prod` environments (PowerUserAccess, workload IAM roles need the `talktally-workload-boundary` boundary). |
 | [0028](docs/adr/0028-route-53-zone-for-the-app-subdomain.md) | Hostinger only registers `tybu.me`; Route 53 zones `tybu.me` (delegation only) and `talktally.tybu.me` live in the bootstrap stack with `prevent_destroy`; CI cannot touch the `tybu.me` zone, delete the app zone, change its DNSSEC or its NS/SOA records. |
+| [0029](docs/adr/0029-terraform-pipeline-in-github-actions.md) | One Terraform workflow on every PR; required check `Terraform` sums fmt, validate, test, TFLint, Trivy (image by digest), a masked dev plan comment and Infracost CI v2; merge applies dev with a fresh plan; prod only static checks until F-65. |
 
 ## Owner actions
 

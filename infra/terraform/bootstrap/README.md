@@ -108,7 +108,7 @@ The workflow `.github/workflows/terraform.yml` assumes the roles. It needs two G
    done
    ```
 
-The next pull request that changes `infra/terraform/` runs the job "AWS plan role". After the merge, the job "AWS deploy role" runs in the `dev` environment.
+Pull requests that change `infra/terraform/` then run the job "Plan dev" with the plan role. After the merge, the job "Apply dev" runs with the deploy role in the `dev` environment ([infra/terraform/README.md](../README.md)).
 
 ## DNS delegation
 
