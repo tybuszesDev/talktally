@@ -1,6 +1,6 @@
 # Vision
 
-> **TalkTally**: you talk, it tallies. Package scope `@talktally/*`, home at `talktally.tybu.com`.
+> **TalkTally**: you talk, it tallies. Package scope `@talktally/*`, home at `talktally.tybu.me`.
 
 ## One-liner
 
@@ -126,7 +126,7 @@ A project is created from a template. A template defines which modules the proje
 ## Constraints and context
 
 - AWS account with roughly 100 USD of credits.
-- Domain `tybu.com` registered at Hostinger. The app lives on the subdomain `talktally.tybu.com`.
+- Domain `tybu.me` registered at Hostinger. The app lives on the subdomain `talktally.tybu.me`.
 - Apple Developer Program membership (99 USD per year) for TestFlight distribution.
 - Dictation language: Polish. UI language: English.
 

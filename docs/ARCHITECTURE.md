@@ -73,8 +73,8 @@ See [ADR-0001](adr/0001-monorepo-pnpm-turborepo.md).
 
 | Environment | Web app | Deployed from | Purpose |
 |---|---|---|---|
-| `dev` | `dev.talktally.tybu.com` | every merge to `main` | integration, end-to-end and device tests, work in progress |
-| `prod` | `talktally.tybu.com` | release tag with manual approval | public demo |
+| `dev` | `dev.talktally.tybu.me` | every merge to `main` | integration, end-to-end and device tests, work in progress |
+| `prod` | `talktally.tybu.me` | release tag with manual approval | public demo |
 
 Both environments live in one AWS account, separated by resource name prefixes ([ADR-0003](adr/0003-terraform-infrastructure-as-code.md)).
 

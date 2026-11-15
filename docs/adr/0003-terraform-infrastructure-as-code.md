@@ -1,6 +1,6 @@
 # ADR-0003: Terraform for all infrastructure
 
-- Status: Accepted
+- Status: Accepted, amended by [ADR-0027](0027-ci-access-to-aws-with-github-oidc-roles.md) and [ADR-0028](0028-route-53-zone-for-the-app-subdomain.md)
 - Date: 2026-11-05
 
 ## Context

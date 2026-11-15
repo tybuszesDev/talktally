@@ -110,6 +110,45 @@ locals {
       ]
       Resource = aws_sns_topic.alerts.arn
     },
+    {
+      # The environment stacks never need the tybu.me zone. A change there
+      # could redirect or break the whole domain (ADR-0028).
+      Sid      = "DenyParentDnsZoneAccess"
+      Effect   = "Deny"
+      Action   = "route53:*"
+      Resource = aws_route53_zone.parent.arn
+    },
+    {
+      # The delegation in the tybu.me zone names this zone's name servers, so
+      # the zone must stay (ADR-0028). DNSSEC is a zone setting, which this
+      # stack owns.
+      Sid    = "DenyDnsZoneDeletionAndDnssec"
+      Effect = "Deny"
+      Action = [
+        "route53:ActivateKeySigningKey",
+        "route53:CreateKeySigningKey",
+        "route53:DeactivateKeySigningKey",
+        "route53:DeleteHostedZone",
+        "route53:DeleteKeySigningKey",
+        "route53:DisableHostedZoneDNSSEC",
+        "route53:EnableHostedZoneDNSSEC",
+      ]
+      Resource = aws_route53_zone.app.arn
+    },
+    {
+      # NS and SOA records decide which name servers answer for the zone and
+      # its subdomains. The environment stacks need neither. ForAnyValue also
+      # matches a request that mixes them with other record types.
+      Sid      = "DenyDnsDelegationRecordChanges"
+      Effect   = "Deny"
+      Action   = "route53:ChangeResourceRecordSets"
+      Resource = aws_route53_zone.app.arn
+      Condition = {
+        "ForAnyValue:StringEquals" = {
+          "route53:ChangeResourceRecordSetsRecordTypes" = ["NS", "SOA"]
+        }
+      }
+    },
   ]
 }
 

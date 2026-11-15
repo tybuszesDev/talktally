@@ -39,7 +39,8 @@ Things only the owner can do. Check this list before starting each feature.
 | F-06 (before merge) | Register the release GitHub App and create the `release` environment with its client ID and private key ([CONTRIBUTING](../CONTRIBUTING.md#github-app-and-release-environment)) |
 | F-10 | Install Terraform and the AWS CLI (2.32.0 or later). Create an IAM administrator user with passkey MFA and sign in with `aws login`, so the root account is never used for daily work ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
 | Before the free plan ends | Upgrade the AWS account to the paid plan by hand in the Billing console, so the account does not close ([ADR-0026](adr/0026-admin-access-with-iam-user-and-aws-login.md)) |
-| F-12 | Add the four NS records for `talktally.tybu.com` in the Hostinger DNS zone editor |
+| F-12 | Set the name servers of `tybu.me` in hPanel to the four name servers of the Route 53 zone `tybu.me` ([bootstrap README](../infra/terraform/bootstrap/README.md#dns-delegation)) |
+| Before 2027-05-21 | Keep automatic renewal of `tybu.me` on at Hostinger. The app's host names depend on it ([ADR-0028](adr/0028-route-53-zone-for-the-app-subdomain.md)) |
 | F-14 | Record 3 real renovation dictations (1–3 minutes each). Enable Bedrock model access for Anthropic models |
 | F-24 | Active Apple Developer Program membership; free Expo account |
 | F-26 | Free Sentry account |
@@ -65,7 +66,7 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 |---|---|---|
 | F-10 | `feat(infra): add bootstrap stack with state, budgets and alerts` | State bucket with native locking; AWS Budgets (10 USD) and Cost Anomaly Detection email alerts; SNS alerts topic; applied locally and documented |
 | F-11 | `feat(infra): add GitHub OIDC roles` | `plan` role trusted only by pull requests of this repository; `deploy` role trusted only by the `dev` and `prod` environments, which accept only `main` (and release tags for prod); no access keys exist ([ADR-0027](adr/0027-ci-access-to-aws-with-github-oidc-roles.md)) |
-| F-12 | `feat(infra): add Route 53 zone for talktally.tybu.com` | Zone created; NS records added at Hostinger; `dig` resolves a test record |
+| F-12 | `feat(infra): add Route 53 zone for talktally.tybu.me` | Zones `tybu.me` and `talktally.tybu.me` created; `tybu.me` uses the Route 53 name servers at Hostinger; `dig` resolves a test record |
 | F-13 | `ci: add Terraform pipeline for the dev environment` | Root modules `envs/dev` and `envs/prod` with tagging; PRs show fmt, validate, tflint, trivy, `terraform test`, plan and Infracost comments; merge applies dev |
 | F-14 | `docs: record Bedrock and Transcribe spike results` | Bedrock access to Claude Opus 5.5 confirmed from `eu-central-1`; account plan type checked; Transcribe `pl-PL` quality tested on 3 real renovation dictations; results and costs written down |
 
@@ -76,7 +77,7 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 | F-20 | `feat(auth): add Cognito user pool with invite-only sign-up` | User pool and two app clients in dev; self sign-up disabled; `pnpm invite <email>` creates a user |
 | F-21 | `feat(api): add AppSync API with schema codegen and me query` | DynamoDB table, AppSync API, resolver Lambda with Powertools; `me` returns settings with defaults and `minimumClientVersion`; `schemaVersion` on items; codegen and schema-diff checks in CI; integration test with DynamoDB Local |
 | F-22 | `feat(client): add shared auth and GraphQL client` | `packages/client` signs in with SRP, calls `me`, caches with TanStack Query; no DOM or React Native imports (dependency-cruiser) |
-| F-23 | `feat(web): add web shell with sign-in, deployed to dev` | `packages/design-tokens`; Vite app with sign-in, sign-out and an account page; S3 + CloudFront on `dev.talktally.tybu.com`; Playwright smoke test with axe passes after deploy |
+| F-23 | `feat(web): add web shell with sign-in, deployed to dev` | `packages/design-tokens`; Vite app with sign-in, sign-out and an account page; S3 + CloudFront on `dev.talktally.tybu.me`; Playwright smoke test with axe passes after deploy |
 | F-24 | `feat(mobile): add iOS app shell with sign-in` | Expo app with sign-in and an account screen; EAS development and preview builds; first TestFlight internal build installed on the owner's iPhone; "Update required" screen below `minimumClientVersion` |
 | F-25 | `feat(api): add live change notifications` | Streams → Pipes → bus → AppSync `publishChange` → `onChange` (ADR-0018); a settings change on the web appears on the phone within seconds; cross-user tests pass |
 | F-26 | `feat(observability): add tracing, dashboard, alarms and Sentry` | Correlation ID end to end; X-Ray traces; dashboard and alarms in dev; Sentry receives a test error from web and mobile |
@@ -126,10 +127,10 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 |---|---|---|
 | F-60 | `feat(account): add settings` | Time zone, dictation language, auto-apply threshold on web and mobile |
 | F-61 | `feat(account): add data export and account deletion` | JSON export through a time-limited link; in-app account deletion removes Cognito, DynamoDB and S3 data |
-| F-62 | `feat(web): add privacy policy page` | `talktally.tybu.com/privacy`; App Store privacy answers documented |
+| F-62 | `feat(web): add privacy policy page` | `talktally.tybu.me/privacy`; App Store privacy answers documented |
 | F-63 | `feat(demo): add demo account with daily reset` | Demo user with lower quotas and sample renovation data, reset every night |
 | F-64 | `test(mobile): add device tests on simulators and AWS Device Farm` | Appium suite for critical flows; nightly simulator runs; Device Farm `ios-core` run on release tags with videos linked |
-| F-65 | `feat(infra): add prod environment and release deployment` | prod on `talktally.tybu.com` and `api.talktally.tybu.com`; release-please release triggers deployment behind approval |
+| F-65 | `feat(infra): add prod environment and release deployment` | prod on `talktally.tybu.me` and `api.talktally.tybu.me`; release-please release triggers deployment behind approval |
 | F-66 | `docs: add runbooks and review security model` | Runbooks for pipeline failure, budget alarm, DynamoDB restore, audio restore; postmortem template; SECURITY-MODEL reviewed |
 | F-67 | `docs: write README as project landing page` | Demo link, video, badges, C4 diagram, local setup in three commands, cost report, evaluation summary |
 

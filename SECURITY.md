@@ -27,6 +27,6 @@ This is a one-person project, so responses are best effort:
 ## Scope
 
 - The code in this repository.
-- The deployed app at `talktally.tybu.com` and its subdomains, once they exist. Do not access, modify or delete other users' data, and do not run load or denial-of-service tests.
+- The deployed app at `talktally.tybu.me` and its subdomains, once they exist. Do not access, modify or delete other users' data, and do not run load or denial-of-service tests.
 
 The threat model and the controls in place are described in [docs/SECURITY-MODEL.md](docs/SECURITY-MODEL.md).

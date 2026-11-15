@@ -22,6 +22,13 @@ output "ci_deploy_role_arn" {
   value       = aws_iam_role.ci_deploy.arn
 }
 
+# The owner sets these as the name servers of tybu.me at Hostinger (README.md).
+# The environment stacks find the app zone by name.
+output "dns_name_servers" {
+  description = "Name servers of the tybu.me zone, to set as the domain's name servers at Hostinger."
+  value       = aws_route53_zone.parent.name_servers
+}
+
 # Every IAM role in envs/dev and envs/prod sets this as permissions_boundary.
 output "workload_boundary_policy_arn" {
   description = "Permissions boundary required on every role the deploy role creates."
