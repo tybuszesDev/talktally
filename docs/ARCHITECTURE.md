@@ -22,7 +22,7 @@ flowchart LR
     SFN[Step Functions<br/>entry processing]
     TR[Transcribe<br/>pl-PL]
     EX[Lambda<br/>extract + apply]
-    BR[Bedrock<br/>Claude]
+    BR[Bedrock<br/>Nova Pro]
     EB[EventBridge<br/>bus, Pipes, Scheduler]
     PL[Lambda<br/>plan suggestions]
   end
