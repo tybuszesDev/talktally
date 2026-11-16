@@ -13,7 +13,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0001](0001-monorepo-pnpm-turborepo.md) | Monorepo with pnpm workspaces and Turborepo | Accepted |
 | [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted, amended by 0028 and 0030 |
 | [0003](0003-terraform-infrastructure-as-code.md) | Terraform for all infrastructure | Accepted, amended by 0027 and 0028 |
-| [0004](0004-authentication-with-cognito.md) | Authentication with Amazon Cognito | Accepted |
+| [0004](0004-authentication-with-cognito.md) | Authentication with Amazon Cognito | Accepted, amended by 0032 |
 | [0005](0005-graphql-api-with-appsync.md) | GraphQL API with AWS AppSync | Accepted, amended by 0018 |
 | [0006](0006-dynamodb-single-table.md) | DynamoDB single-table data store | Accepted |
 | [0007](0007-voice-processing-pipeline.md) | Voice processing pipeline | Accepted, amended by 0031 |
@@ -41,6 +41,7 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0029](0029-terraform-pipeline-in-github-actions.md) | Terraform pipeline in GitHub Actions | Accepted |
 | [0030](0030-extraction-model-nova-pro-with-forced-tool-use.md) | Extraction model Amazon Nova Pro with a forced tool call | Accepted |
 | [0031](0031-audio-input-formats-and-recording-quality.md) | Audio input formats and recording quality | Accepted |
+| [0032](0032-user-pool-settings-and-invitations.md) | User pool settings and invitations | Accepted |
 
 ## Template
 

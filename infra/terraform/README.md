@@ -9,7 +9,14 @@ All AWS infrastructure of TalkTally ([ADR-0003](../../docs/adr/0003-terraform-in
 | `envs/prod/` | Root module of the prod environment, state key `envs/prod/terraform.tfstate` | Nobody yet: plan and approved apply come with F-65 |
 | `.tflint.hcl` | TFLint rules for every root module | — |
 
-Today each environment holds one resource: the resource group `talktally-<env>-resources`. It lists every resource of the environment in the AWS console (Resource Groups), selected by the tags below.
+Each environment has the resource group `talktally-<env>-resources`. It lists every resource of the environment in the AWS console (Resource Groups), selected by the tags below.
+
+| File (`envs/dev/`) | Resources |
+|---|---|
+| `main.tf` | Resource group |
+| `auth.tf` | Cognito user pool `talktally-dev-users` with the app clients `web` and `mobile` ([ADR-0032](../../docs/adr/0032-user-pool-settings-and-invitations.md)); outputs in `outputs.tf`. Users are invited with `pnpm invite` ([CONTRIBUTING](../../CONTRIBUTING.md#inviting-users)) |
+
+`envs/prod/` holds only the resource group until F-65.
 
 ## Rules for new resources
 
@@ -32,7 +39,7 @@ After the merge, the job "Apply dev" plans `main` again and applies it with the 
 
 ## Local checks
 
-The same checks as CI, from the repository root. Install the tools once: `brew install tflint trivy` (Terraform: [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites)).
+The same checks as CI, from the repository root. Install the tools once: `brew install --cask terraform-linters/tap/tflint` (the maintainers' tap; TFLint left Homebrew core in v0.63.0) and `brew install trivy` (Terraform: [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites)).
 
 ```sh
 terraform fmt -check -recursive infra/terraform

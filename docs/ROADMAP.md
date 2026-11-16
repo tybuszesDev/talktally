@@ -74,7 +74,7 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 
 | ID | Commit | Done when |
 |---|---|---|
-| F-20 | `feat(auth): add Cognito user pool with invite-only sign-up` | User pool and two app clients in dev; self sign-up disabled; `pnpm invite <email>` creates a user |
+| F-20 | `feat(infra): add Cognito user pool with invite-only sign-up` | User pool and two app clients in dev; self sign-up disabled; `pnpm invite <email>` creates a user |
 | F-21 | `feat(api): add AppSync API with schema codegen and me query` | DynamoDB table, AppSync API, resolver Lambda with Powertools; `me` returns settings with defaults and `minimumClientVersion`; `schemaVersion` on items; codegen and schema-diff checks in CI; integration test with DynamoDB Local |
 | F-22 | `feat(client): add shared auth and GraphQL client` | `packages/client` signs in with SRP, calls `me`, caches with TanStack Query; no DOM or React Native imports (dependency-cruiser) |
 | F-23 | `feat(web): add web shell with sign-in, deployed to dev` | `packages/design-tokens`; Vite app with sign-in, sign-out and an account page; S3 + CloudFront on `dev.talktally.tybu.me`; Playwright smoke test with axe passes after deploy |

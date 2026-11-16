@@ -16,7 +16,7 @@ Security problems: see [SECURITY.md](SECURITY.md), not public issues.
 - For the mobile app: **Xcode** with an iOS simulator, and the **Xcode Command Line Tools** (`xcode-select --install`).
 - For infrastructure work only: **Terraform 1.15 or later** from HashiCorp's tap: `brew install hashicorp/tap/terraform` (needs the Command Line Tools).
 - For infrastructure work only: the **AWS CLI 2.32.0 or later** from the [official macOS installer](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). Sign in with `aws login --profile talktally-admin` and `export AWS_PROFILE=talktally-admin` ([ADR-0026](docs/adr/0026-admin-access-with-iam-user-and-aws-login.md)). The one-time setup is in [infra/terraform/bootstrap/README.md](infra/terraform/bootstrap/README.md).
-- For infrastructure work only: **TFLint** and **Trivy**, to run the pull request checks locally: `brew install tflint trivy` ([infra/terraform/README.md](infra/terraform/README.md#local-checks)).
+- For infrastructure work only: **TFLint** and **Trivy**, to run the pull request checks locally: `brew install --cask terraform-linters/tap/tflint` and `brew install trivy` ([infra/terraform/README.md](infra/terraform/README.md#local-checks)).
 - Keep the clone **outside iCloud-synced folders** such as Desktop or Documents: iCloud adds file attributes that break Xcode code signing.
 
 ## Setup
@@ -38,6 +38,7 @@ pnpm install   # installs dependencies and the git hooks
 | `pnpm build` | Web build and iOS bundle |
 | `pnpm check:architecture` | Import rules from ADR-0001 with dependency-cruiser ([dependency-cruiser.config.js](dependency-cruiser.config.js)) |
 | `pnpm check:unused` | Unused files, exports and dependencies with knip ([knip.config.js](knip.config.js)) |
+| `pnpm invite <email>` | Invites a user to the dev user pool ([Inviting users](#inviting-users)) |
 | `pnpm --filter @talktally/web dev` | Web app at http://localhost:5173 |
 | `pnpm --filter @talktally/mobile ios` | Builds the development client and runs it on the iPhone 17 simulator (`ios:small`, `ios:large` for other sizes) |
 
@@ -50,6 +51,21 @@ Installed by lefthook during `pnpm install`:
 - **pre-push:** typecheck and tests of the workspaces affected by the branch.
 
 Formatting happens only in the hook and in CI. No editor setup is needed.
+
+## Inviting users
+
+Sign-up is invite-only: only the owner creates accounts ([ADR-0032](docs/adr/0032-user-pool-settings-and-invitations.md)). With the administrator session:
+
+```sh
+aws login --profile talktally-admin
+export AWS_PROFILE=talktally-admin
+pnpm invite someone@example.com            # dev; --env prod once prod exists
+pnpm invite someone@example.com --resend   # new temporary password for an existing user
+```
+
+- Cognito emails the invitation from `no-reply@verificationemail.com`; tell the person to check the spam folder. The account can send at most 50 Cognito emails a day (invitations, verification codes and password resets together).
+- The temporary password is valid for 7 days. At the first sign-in the user chooses a password of at least 15 characters.
+- The script ([scripts/invite.mjs](scripts/invite.mjs)) finds the pool `talktally-<env>-users` and calls `admin-create-user` through the AWS CLI.
 
 ## Branches and commits
 
