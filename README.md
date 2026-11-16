@@ -38,7 +38,7 @@ TalkTally proposes: tile adhesive −4 bags, tiles laid +3 m², "Fix plumbing le
 | [Roadmap](docs/ROADMAP.md) | Milestones and features |
 | [Working agreement](docs/WORKING-AGREEMENT.md) | Definition of Ready and Done, checks by area |
 | [Code review](docs/CODE-REVIEW.md) | Review layers, CodeRabbit rules, merging |
-| [Architecture decisions](docs/adr/README.md) | 24 ADRs |
+| [Architecture decisions](docs/adr/README.md) | 31 ADRs |
 
 ## How this project is built
 
