@@ -40,6 +40,9 @@ resource "aws_cognito_user_pool" "users" {
         <p>You will choose your own password when you first sign in. The temporary password expires in ${local.temporary_password_days} days.</p>
         <p>Account: {username}</p>
       EOT
+      # Never sent (invitations go by email), but CreateUserPool rejects an
+      # empty SMS template, which the provider sends when this is unset.
+      sms_message = "TalkTally account {username}, temporary password {####}"
     }
   }
 

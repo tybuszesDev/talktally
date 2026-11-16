@@ -99,6 +99,17 @@ run "user_pool_sends_invitations_by_cognito_email" {
     error_message = "The invitation email must contain {username} and {####}."
   }
 
+  # CreateUserPool rejects an empty SMS template (at least 6 characters), and
+  # the provider sends an empty one when it is not set, although invitations go
+  # only by email. Plan cannot catch it, so the test does.
+  assert {
+    condition = try(alltrue([
+      for placeholder in ["{username}", "{####}"] :
+      strcontains(aws_cognito_user_pool.users.admin_create_user_config[0].invite_message_template[0].sms_message, placeholder)
+    ]), false)
+    error_message = "The invitation SMS template must be set and contain {username} and {####}."
+  }
+
   assert {
     condition     = strcontains(aws_cognito_user_pool.users.admin_create_user_config[0].invite_message_template[0].email_message, "expires in ${aws_cognito_user_pool.users.password_policy[0].temporary_password_validity_days} days")
     error_message = "The invitation email must state the validity of the temporary password from the password policy."
