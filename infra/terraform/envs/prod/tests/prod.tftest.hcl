@@ -33,3 +33,14 @@ run "resource_group_selects_only_this_environment" {
     error_message = "The resource group must select all resources tagged Project=talktally and Environment=prod."
   }
 }
+
+# AWS checks the description only when it creates the group, so plan cannot
+# catch it (#93). Pattern from the CreateGroup error message.
+run "resource_group_description_uses_allowed_characters" {
+  command = plan
+
+  assert {
+    condition     = can(regex("^[\\sa-zA-Z0-9_.-]*$", aws_resourcegroups_group.environment.description))
+    error_message = "The resource group description may contain only letters, digits, spaces, '_', '.' and '-'."
+  }
+}
