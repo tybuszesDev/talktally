@@ -22,7 +22,7 @@ TalkTally proposes: tile adhesive −4 bags, tiles laid +3 m², "Fix plumbing le
 
 - **Mobile app** (Expo, iOS first): today's plan, dictation, review of proposed changes.
 - **Web app** (Vite + React): projects, tables, inventory, metrics, history and undo.
-- **Backend** (serverless AWS, Terraform): Cognito, AppSync GraphQL with live subscriptions, DynamoDB, a Step Functions pipeline with Amazon Transcribe and Claude on Amazon Bedrock.
+- **Backend** (serverless AWS, Terraform): Cognito, AppSync GraphQL with live subscriptions, DynamoDB, a Step Functions pipeline with Amazon Transcribe and Amazon Nova on Amazon Bedrock.
 - **AI proposes, code applies:** the model returns a validated change set; deterministic, tested code applies it ([ADR-0008](docs/adr/0008-ai-proposes-changes-code-applies-them.md)).
 - Running cost target: under 10 USD per month for one active user ([ADR-0002](docs/adr/0002-serverless-aws-and-cost-guardrails.md)).
 

@@ -100,10 +100,10 @@ Also in M0, without a commit: GitHub Projects board, milestones M0–M6 and one 
 | ID | Commit | Done when |
 |---|---|---|
 | F-40 | `feat(api): add entry upload with quotas` | `createEntryUpload` returns a presigned POST limited by size and type; quotas and usage counters enforced; demo quotas configurable |
-| F-41 | `feat(mobile): add recording with offline upload queue` | Record 16 kHz mono AAC; upload with progress; recordings made offline upload when the network returns |
+| F-41 | `feat(mobile): add recording with offline upload queue` | Record mono at the best quality the device supports (ADR-0031); upload with progress; recordings made offline upload when the network returns |
 | F-42 | `feat(pipeline): add transcription workflow` | S3 event starts Step Functions; Transcribe `pl-PL`; entry statuses published live; failures set `FAILED` with a reason; retry works; text entries skip transcription |
 | F-43 | `feat(domain): add change set operations, apply and undo` | All operation schemas from ADR-0008; `applyChangeSet` and inverse operations are pure and tested; 100-item transaction limit handled |
-| F-44 | `feat(pipeline): add AI extraction with review routing` | Context builder, prompt v1, structured outputs, validation, auto-apply above the threshold, pending operations with clarifications, one transaction per apply, AI metadata stored |
+| F-44 | `feat(pipeline): add AI extraction with review routing` | Context builder, prompt v1, forced tool call (ADR-0030), validation, auto-apply above the threshold, pending operations with clarifications, one transaction per apply, AI metadata stored |
 | F-45 | `test(pipeline): add extraction evaluation set` | At least 20 real Polish dictations with expected operations; `pnpm eval:extraction` reports precision, recall and cost; first report in `docs/evals/` |
 | F-46 | `feat(mobile): add entry status and review screen` | Live status after recording; confirm, edit or reject pending operations; answer clarifications; undo |
 | F-47 | `feat(web): add entry history, review inbox and text entries` | Entry list and detail with transcript and operations; inbox of pending reviews across projects; undo; text entry form |

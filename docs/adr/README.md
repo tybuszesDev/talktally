@@ -11,13 +11,13 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | ADR | Title | Status |
 |---|---|---|
 | [0001](0001-monorepo-pnpm-turborepo.md) | Monorepo with pnpm workspaces and Turborepo | Accepted |
-| [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted, amended by 0028 |
+| [0002](0002-serverless-aws-and-cost-guardrails.md) | Serverless on AWS with cost guardrails | Accepted, amended by 0028 and 0030 |
 | [0003](0003-terraform-infrastructure-as-code.md) | Terraform for all infrastructure | Accepted, amended by 0027 and 0028 |
 | [0004](0004-authentication-with-cognito.md) | Authentication with Amazon Cognito | Accepted |
 | [0005](0005-graphql-api-with-appsync.md) | GraphQL API with AWS AppSync | Accepted, amended by 0018 |
 | [0006](0006-dynamodb-single-table.md) | DynamoDB single-table data store | Accepted |
-| [0007](0007-voice-processing-pipeline.md) | Voice processing pipeline | Accepted |
-| [0008](0008-ai-proposes-changes-code-applies-them.md) | AI proposes change sets, deterministic code applies them | Accepted |
+| [0007](0007-voice-processing-pipeline.md) | Voice processing pipeline | Accepted, amended by 0031 |
+| [0008](0008-ai-proposes-changes-code-applies-them.md) | AI proposes change sets, deterministic code applies them | Accepted, amended by 0030 |
 | [0009](0009-templates-over-fixed-domain-primitives.md) | Templates configure fixed domain primitives | Accepted |
 | [0010](0010-client-applications.md) | Client applications: Vite SPA, Expo, Electron later | Accepted |
 | [0011](0011-testing-strategy-and-quality-gates.md) | Testing strategy and quality gates | Accepted |
@@ -39,6 +39,8 @@ Each significant decision is recorded as a short ADR. ADRs are immutable once ac
 | [0027](0027-ci-access-to-aws-with-github-oidc-roles.md) | CI access to AWS with GitHub OIDC roles | Accepted, amended by 0028 |
 | [0028](0028-route-53-zone-for-the-app-subdomain.md) | Route 53 zones for tybu.me and the app subdomain | Accepted |
 | [0029](0029-terraform-pipeline-in-github-actions.md) | Terraform pipeline in GitHub Actions | Accepted |
+| [0030](0030-extraction-model-nova-pro-with-forced-tool-use.md) | Extraction model Amazon Nova Pro with a forced tool call | Accepted |
+| [0031](0031-audio-input-formats-and-recording-quality.md) | Audio input formats and recording quality | Accepted |
 
 ## Template
 
