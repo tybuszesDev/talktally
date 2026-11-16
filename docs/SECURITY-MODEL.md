@@ -30,7 +30,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 
 ### Spoofing
 
-- Cognito SRP sign-in, optional TOTP MFA, short-lived access tokens.
+- Cognito SRP sign-in with passwords of at least 15 characters, optional TOTP MFA, 60-minute access tokens and revocable refresh tokens; sign-in and password recovery do not reveal whether an account exists (ADR-0032).
 - OIDC trust policies match exact subjects in GitHub's immutable format, which contains the owner and repository IDs, so a recycled owner or repository name cannot produce them (ADR-0027).
   - The `plan` role trusts only pull requests of this repository.
   - The `deploy` role trusts only jobs in the `dev` environment (deployments only from `main`) and the `prod` environment (`main` and release tags, approved by the owner).
@@ -116,6 +116,7 @@ User rights in the MVP:
 | Control | Reason | Revisit when |
 |---|---|---|
 | AWS WAF | Monthly fee per web ACL and per rule; invite-only sign-up and quotas cover the risk | Public sign-up is opened |
+| Cognito threat protection (compromised credentials, adaptive authentication) | Needs the Plus tier, which has no free tier; few invited users with long passwords | Public sign-up is opened |
 | Amazon GuardDuty | Paid after the 30-day trial | The account holds more than this project |
 | AWS Security Hub | Paid per security check | Same as above |
 | AWS Config | Paid per configuration item recorded | Compliance requirements appear |
