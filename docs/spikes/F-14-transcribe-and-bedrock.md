@@ -11,7 +11,7 @@
 - **The 16 kHz format from ADR-0007 is slightly worse** than the original 48 kHz recordings. The pipeline therefore accepts every format Transcribe supports, and the mobile app records at the best quality it can (ADR-0031).
 - **Claude is not available.** Anthropic models are denied for this account on both plans ("not available for this account"). So are the OpenAI GPT-5 and GPT-6 models, Grok and GLM-5.3.
 - **No available model is good enough to apply changes without review.** Ten models were compared on the same dictations. The best found about three quarters of the expected facts, and every model gave high confidence to some wrong operations.
-- **Amazon Nova Pro was chosen** for extraction (ADR-0030): highest recall, fewest invalid operations, fastest, an AWS model processed in the EU. It does not support structured outputs, so it is called with a forced tool call and validated with Zod. All operations go to review until the evaluation set (F-45) shows when auto-apply is safe.
+- **Amazon Nova Pro was chosen** for extraction (ADR-0030): the highest share of found facts, few invalid operations (3%), the lowest latency among the five strongest models, and an AWS model processed in the EU. It does not support structured outputs, so it is called with a forced tool call and validated with Zod. All operations go to review until the evaluation set (F-45) shows when auto-apply is safe.
 - Estimated cost of the whole spike: about 1.35 USD, half of it one expensive model (Kimi K3.1).
 
 ## Setup
