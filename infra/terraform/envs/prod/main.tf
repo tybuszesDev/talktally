@@ -12,8 +12,9 @@ locals {
 # filters with different keys must all match, so the group never shows
 # another environment. Resource Groups has no charge.
 resource "aws_resourcegroups_group" "environment" {
+  # The description allows only letters, digits, spaces, '_', '.' and '-' (#93).
   name        = "${local.name_prefix}resources"
-  description = "All TalkTally ${local.environment} resources, selected by tag."
+  description = "All TalkTally ${local.environment} resources selected by tag."
 
   resource_query {
     query = jsonencode({
