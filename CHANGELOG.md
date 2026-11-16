@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/tybuszesDev/talktally/compare/v0.3.1...v0.4.0) (2026-11-16)
+
+
+### Features
+
+* **infra:** add Cognito user pool with invite-only sign-up ([#98](https://github.com/tybuszesDev/talktally/issues/98)) ([6d65c98](https://github.com/tybuszesDev/talktally/commit/6d65c9823dccccb7129c97e3ab980c59123e8811))
+
+
+### Bug Fixes
+
+* **infra:** set the SMS invitation template of the user pool ([#103](https://github.com/tybuszesDev/talktally/issues/103)) ([dfdf700](https://github.com/tybuszesDev/talktally/commit/dfdf7009928773a2d50075cfa522d9781ab1e25d))
+
 ## [0.3.1](https://github.com/tybuszesDev/talktally/compare/v0.3.0...v0.3.1) (2026-11-16)
 
 
