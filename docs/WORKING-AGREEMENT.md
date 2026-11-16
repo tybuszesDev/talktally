@@ -74,7 +74,7 @@ Apply each row whose area the change touches.
 | **GraphQL schema** | Expand → migrate → contract ([ADR-0020](adr/0020-schema-evolution-and-backward-compatibility.md)): within a release the schema only grows; removal only after deprecation and a raised `minimumClientVersion`; the schema diff check passes. Generated code is up to date |
 | **DynamoDB data** | New access patterns are added to [DOMAIN](DOMAIN.md). Changed item shapes raise `schemaVersion`, old versions stay readable, and migrations are idempotent with a dry run ([ADR-0020](adr/0020-schema-evolution-and-backward-compatibility.md)) |
 | **Auth, IAM, resolvers, subscriptions** | Cross-user authorization tests; `/security-review`; [SECURITY-MODEL](SECURITY-MODEL.md) updated when a threat or control changes |
-| **Infrastructure** | Terraform plan reviewed; Infracost difference reviewed; a new paid service requires an ADR; tags present; apply succeeded |
+| **Infrastructure** | Terraform plan reviewed, including the cost of new resource types; a new paid service requires an ADR; tags present; apply succeeded |
 | **Backend function or pipeline step** | Structured logs with the correlation ID and no user content; a metric or alarm for each new failure mode; retries and idempotency considered |
 | **AI prompt or model** | Prompt version increased; evaluation set run; report added to `docs/evals/`. The new version may not be worse than the previous report by more than 2 percentage points in **precision** (share of proposed changes that are correct) or **recall** (share of expected changes that were found) |
 | **Mobile** | Runs on the smallest and the largest supported iPhone simulator; a new native module means a new development build; permission texts are correct |

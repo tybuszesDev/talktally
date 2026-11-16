@@ -1,6 +1,11 @@
 # S3 bucket for Terraform state of every root module (bootstrap, envs/dev,
 # envs/prod), each under its own key. Locking uses S3 lock files
 # (use_lockfile), so no DynamoDB table is needed (ADR-0003).
+#
+# No server access logging: it would need a second bucket for the logs. Only
+# the owner and the two CI roles can reach the state, the state holds no user
+# content and no secret values (ADR-0027), and versioning keeps every write.
+#trivy:ignore:AWS-0089
 resource "aws_s3_bucket" "state" {
   bucket = local.state_bucket_name
 
@@ -20,7 +25,10 @@ resource "aws_s3_bucket_versioning" "state" {
   }
 }
 
-# SSE-S3 (AWS-managed keys, no cost), as in SECURITY-MODEL.
+# SSE-S3 (AWS-managed keys, no cost), as in SECURITY-MODEL. A customer managed
+# KMS key would cost about 1 USD per month, 10% of the budget, and access is
+# already limited by IAM and the bucket policy.
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 

@@ -45,6 +45,8 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Change sets are validated with Zod; referenced IDs are checked against the caller's project; DynamoDB writes use condition expressions and versions.
 - Branch protection, required checks and actions pinned by commit SHA protect the pipeline.
 - CodeQL scans the code and the workflows on every pull request; new high or critical security alerts block the merge. OpenSSF Scorecard rates the repository settings weekly (ADR-0017).
+- Trivy runs from its official image pinned by digest, not through `aquasecurity/trivy-action`, whose tags an attacker rewrote in March 2026. Its updates wait for the owner's approval (ADR-0029).
+- The Terraform lock files are committed and CI runs `terraform init -lockfile=readonly`, so CI installs only providers whose checksums were reviewed (ADR-0029).
 
 ### Repudiation
 
@@ -58,7 +60,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
 - Encryption at rest everywhere (AWS-managed keys) and TLS in transit. One exception: the `talktally-alerts` SNS topic is not encrypted at rest. AWS Budgets cannot publish to a topic encrypted with the AWS-managed key, and a customer managed key would cost about 1 USD per month. The topic carries cost alerts only, never user content ([bootstrap README](../infra/terraform/bootstrap/README.md)).
 - Logs and Sentry events never contain transcripts, audio URLs or tokens (ADR-0015).
 - gitleaks scans staged changes before each commit and every pushed commit in CI; GitHub secret scanning with push protection is enabled.
-- According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
+- Terraform plan comments and their artifacts are public. The plan job replaces the account ID with `<account-id>` before the text leaves the job, because GitHub masks it only in logs. The binary plan never leaves the runner (ADR-0029).- According to AWS documentation, Bedrock does not use prompts or outputs to train models. This is verified again before the first prod deployment.
 
 ### Denial of service and denial of wallet
 
@@ -82,6 +84,7 @@ A lightweight threat model (STRIDE) for TalkTally. Update it when a change touch
     - any use of the DNS zone `tybu.me`;
     - deleting the DNS zone `talktally.tybu.me`, changing its DNSSEC settings, and changing NS or SOA records in it (ADR-0028).
   - So CI cannot create users or access keys, change its own trust or the OIDC provider, enroll the account in Organizations, weaken the cost alerts, or break or redirect the app's DNS delegation.
+  - No Terraform job holds both AWS credentials and a token that writes to the pull request: a separate job without AWS access posts the plan comment (ADR-0029).
 - CI never reads or writes the bootstrap state. A changed state could make the owner's next local `terraform init` install a foreign provider, which `plan` would run with administrator credentials. The owner also runs `terraform init -lockfile=readonly` for the bootstrap stack, so a provider missing from the committed lock file stops the init (ADR-0027). The state bucket policy denies requests through access points, so no second path to the state objects can bypass these denies.
 - Dependency install scripts run only for an allowlist; new package versions wait 3 days before use, both in pnpm and in Renovate, which proposes the updates; security updates come right away (ADR-0017).
 

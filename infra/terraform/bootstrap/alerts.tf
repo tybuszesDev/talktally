@@ -5,6 +5,7 @@
 # an encrypted topic, and the AWS-managed key's policy cannot be changed. A
 # customer managed key would cost about 1 USD per month, 10% of the budget.
 # Alerts contain only cost data, no user content.
+#trivy:ignore:AWS-0095
 resource "aws_sns_topic" "alerts" {
   name = "talktally-alerts"
 }

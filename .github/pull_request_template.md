@@ -33,7 +33,7 @@ Closes #
 - [ ] GraphQL schema: expand → migrate → contract; schema diff check passes; generated code is up to date
 - [ ] DynamoDB data: new access patterns in DOMAIN; `schemaVersion` raised for changed shapes; idempotent migrations with a dry run
 - [ ] Auth, IAM, resolvers, subscriptions: cross-user authorization tests; `/security-review`; SECURITY-MODEL updated when needed
-- [ ] Infrastructure: Terraform plan and Infracost difference reviewed; a new paid service has an ADR; tags present
+- [ ] Infrastructure: Terraform plan reviewed, including the cost of new resource types; a new paid service has an ADR; tags present
 - [ ] Backend function or pipeline step: structured logs with the correlation ID and no user content; a metric or alarm for each new failure mode; retries and idempotency considered
 - [ ] AI prompt or model: prompt version raised; evaluation report in `docs/evals/`, not worse than the previous one by more than 2 points in precision or recall
 - [ ] Mobile: runs on the smallest and the largest supported iPhone simulator; a new native module means a new development build; permission texts are correct

@@ -1,17 +1,20 @@
-# AWS access for the Terraform pipeline (ADR-0003, ADR-0027). GitHub Actions assume IAM roles
-# through OIDC; no AWS keys are stored. Pull requests get the read-only plan role; jobs in the
-# dev and prod environments get the deploy role. The role ARNs are secrets, so the account ID
-# stays out of the public logs. Setup: infra/terraform/bootstrap/README.md, "GitHub access".
+# Terraform pipeline (ADR-0003, ADR-0017, ADR-0027, ADR-0029). GitHub Actions assume IAM roles
+# through OIDC; no AWS keys are stored. The role ARNs are secrets, so the account ID stays out
+# of the public logs. Setup: infra/terraform/bootstrap/README.md, "GitHub access".
 #
-# For now each job only proves that its role can be assumed. F-13 replaces these checks with
-# fmt, validate, tflint, trivy, test, plan and apply.
+# Pull requests: static checks of every root module (fmt, validate, test, TFLint, Trivy) and a
+# plan of dev with the read-only plan role, posted as a comment. The job "Terraform" sums them
+# up and is the required check. The workflow therefore runs on every pull request and its jobs
+# skip when nothing under infra/terraform changed: a required check of a workflow that a paths
+# filter skipped would stay pending forever. Costs are watched in AWS (Budgets, Cost Anomaly
+# Detection), not by a third-party estimate (ADR-0029).
+#
+# Pushes to main: a fresh plan of dev, applied with the deploy role in the dev environment.
+# prod gets its plan and its approved apply in F-65.
 name: Terraform
 
 on:
   pull_request:
-    paths:
-      - 'infra/terraform/**'
-      - '.github/workflows/terraform.yml'
   push:
     branches: [main]
     paths:
@@ -23,38 +26,137 @@ permissions: {}
 
 concurrency:
   group: terraform-${{ github.ref }}
+  # An apply on main is never cancelled. A newer pending run on main replaces an older pending
+  # one, which is safe: it applies the newer main.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   AWS_REGION: eu-central-1
   STATE_BUCKET: talktally-tfstate-3af2cc3e
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
 
 jobs:
-  plan-access:
-    name: AWS plan role
-    # Pull requests from forks get no secrets and no OIDC token, so the job would only fail.
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+  changes:
+    name: Detect Terraform changes
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      id-token: write # OIDC token for AWS STS.
+      pull-requests: read # List the files of the pull request.
+    outputs:
+      terraform: ${{ steps.files.outputs.terraform }}
     steps:
+      # The file list is read first: grep -q in a pipe would end it early, and pipefail would
+      # turn the broken pipe into a failure. A renamed file counts with its old path too, so
+      # moving a file out of infra/terraform is a Terraform change.
+      - name: Check the changed files
+        id: files
+        run: |
+          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')"
+          if grep -qE '^(infra/terraform/|\.github/workflows/terraform\.yml$)' <<<"$files"; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+  checks:
+    name: Terraform checks
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # No AWS credentials: the tests mock the AWS provider.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+        with:
+          tflint_version: v0.66.0
+
+      # The steps after this one run even when an earlier check fails (`!cancelled()`), so one
+      # run reports every problem.
+      - name: Check formatting
+        run: terraform fmt -check -recursive -diff infra/terraform
+
+      # Trivy from its official image, pinned by digest, the same way as gitleaks in ci.yml.
+      # Not aquasecurity/trivy-action: most of its tags were moved to malicious commits in
+      # March 2026. Accepted findings are ignored inline, next to the resource, with a reason.
+      - name: Scan for misconfigurations with Trivy
+        if: ${{ !cancelled() }}
+        uses: docker://ghcr.io/aquasecurity/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
+        with:
+          args: config --exit-code 1 --skip-dirs=**/.terraform infra/terraform
+
+      # Root modules are the directories with a dependency lock file. -lockfile=readonly fails
+      # when a provider is missing from the committed lock file.
+      - name: Validate and test the root modules
+        if: ${{ !cancelled() }}
+        run: |
+          status=0
+          for lock in $(find infra/terraform -name .terraform.lock.hcl -not -path '*/.terraform/*' | sort); do
+            dir="$(dirname "$lock")"
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false -lockfile=readonly \
+              && terraform -chdir="$dir" validate \
+              && terraform -chdir="$dir" test \
+              || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
+
+      - name: Install the TFLint plugins
+        if: ${{ !cancelled() }}
+        working-directory: infra/terraform
+        run: tflint --init --config "$PWD/.tflint.hcl"
+        env:
+          # Authenticated GitHub API calls avoid the rate limit that runners share.
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Lint with TFLint
+        if: ${{ !cancelled() }}
+        working-directory: infra/terraform
+        run: tflint --recursive --config "$PWD/.tflint.hcl" --format compact
+
+  plan:
+    name: Plan dev
+    needs: changes
+    # Pull requests from forks get no secrets and no OIDC token, so the job would only fail.
+    # The job "Terraform" then fails too: a fork's Terraform change is never merged unplanned.
+    if: needs.changes.outputs.terraform == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # OIDC token for AWS STS.
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_PLAN_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
 
-      - name: Check the assumed role
-        run: |
-          arn="$(aws sts get-caller-identity --query Arn --output text)"
-          case "$arn" in
-            *":assumed-role/talktally-ci-plan/"*) echo "The job assumed talktally-ci-plan." ;;
-            *) echo "::error::The job did not assume talktally-ci-plan."; exit 1 ;;
-          esac
-
-      # The plan role may write only *.tflock files. This key is not a lock file and not a
-      # state file, so the write must be denied.
+      # The plan role may write only the lock files of the environment stacks (ADR-0027). This
+      # key is neither a lock file nor a state file, so the write must be denied.
       - name: Check that the role cannot write state
         run: |
           if output="$(aws s3api put-object --bucket "$STATE_BUCKET" --key ci/write-check 2>&1)"; then
@@ -79,26 +181,157 @@ jobs:
             *) echo "::error::Unexpected error: $output"; exit 1 ;;
           esac
 
-  deploy-access:
-    name: AWS deploy role
-    if: ${{ github.event_name == 'push' }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+
+      - name: Initialize
+        run: terraform init -lockfile=readonly
+
+      # A plan holds the state lock while it runs; wait for an apply or another plan to end.
+      - name: Plan
+        run: terraform plan -lock-timeout=5m -out=dev.tfplan
+
+      # The comment is public, and GitHub masks the account ID only in logs. So the text is
+      # masked here, before it leaves the job. The binary plan never leaves the runner.
+      - name: Write the plan as masked text
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          terraform show -no-color dev.tfplan | sed "s/$account_id/<account-id>/g" > "$RUNNER_TEMP/plan-dev.txt"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: plan-dev
+          path: ${{ runner.temp }}/plan-dev.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  # A separate job posts the comment, so no job holds both AWS credentials and a token that
+  # writes to the pull request.
+  plan-comment:
+    name: Plan comment
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      pull-requests: write # Create or update the plan comment.
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: plan-dev
+          path: ${{ runner.temp }}/plan
+
+      # One comment per pull request, found by its marker and updated on every push. GitHub
+      # limits the size of a comment, so the plan is cut after 60,000 characters; the job log
+      # of "Plan dev" has all of it. The fence has four backticks, so a plan line with three
+      # cannot close it.
+      - name: Create or update the plan comment
+        run: |
+          marker='<!-- terraform-plan:dev -->'
+          plan="$RUNNER_TEMP/plan/plan-dev.txt"
+          summary="$(grep -m 1 -E '^(Plan: |No changes\.)' "$plan" || true)"
+          {
+            echo "$marker"
+            echo '### Terraform plan: dev'
+            echo
+            echo "${summary:-The plan has no summary line; see the full plan.} Commit ${HEAD_SHA:0:7}."
+            echo
+            echo '<details><summary>Full plan</summary>'
+            echo
+            echo '````'
+            head -c 60000 "$plan"
+            echo
+            echo '````'
+            if [ "$(wc -c < "$plan")" -gt 60000 ]; then
+              echo
+              echo 'The plan is longer than this comment allows. The job "Plan dev" shows all of it.'
+            fi
+            echo
+            echo '</details>'
+          } > "$RUNNER_TEMP/comment.md"
+
+          ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id")"
+          id="${ids%%$'\n'*}"
+          payload="$(jq -Rs '{body: .}' "$RUNNER_TEMP/comment.md")"
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" --input - <<<"$payload" > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --input - <<<"$payload" > /dev/null
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+  # The required check. It passes when nothing under infra/terraform changed, and otherwise
+  # only when every Terraform job succeeded.
+  terraform:
+    name: Terraform
+    if: always() && github.event_name == 'pull_request'
+    needs: [changes, checks, plan, plan-comment]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check the results of the Terraform jobs
+        run: |
+          if [ "$CHANGES_RESULT" != success ]; then
+            echo "::error::Detecting the changed files did not succeed: $CHANGES_RESULT."
+            exit 1
+          fi
+          if [ "$TERRAFORM_CHANGED" != true ]; then
+            echo "No Terraform changes."
+            exit 0
+          fi
+          failed="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")"
+          if [ -n "$failed" ]; then
+            echo "::error::Some Terraform jobs did not succeed. See their logs. A skipped plan means a pull request from a fork: push its branch to this repository."
+            echo "$failed"
+            exit 1
+          fi
+          echo "All Terraform jobs succeeded."
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          TERRAFORM_CHANGED: ${{ needs.changes.outputs.terraform }}
+
+  apply:
+    name: Apply dev
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     # The deploy role trusts only jobs in the dev and prod environments; dev accepts only main.
     environment: dev
     permissions:
+      contents: read
       id-token: write # OIDC token for AWS STS.
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/dev
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
 
-      - name: Check the assumed role
-        run: |
-          arn="$(aws sts get-caller-identity --query Arn --output text)"
-          case "$arn" in
-            *":assumed-role/talktally-ci-deploy/"*) echo "The job assumed talktally-ci-deploy." ;;
-            *) echo "::error::The job did not assume talktally-ci-deploy."; exit 1 ;;
-          esac
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+
+      - name: Initialize
+        run: terraform init -lockfile=readonly
+
+      # A fresh plan of main, not the plan of the pull request: main may have changed since.
+      - name: Plan
+        run: terraform plan -lock-timeout=5m -out=dev.tfplan
+
+      - name: Apply
+        run: terraform apply -lock-timeout=5m dev.tfplan

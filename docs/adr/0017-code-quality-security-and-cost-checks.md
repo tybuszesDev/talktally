@@ -1,6 +1,6 @@
 # ADR-0017: Code quality, security and cost checks in CI
 
-- Status: Accepted
+- Status: Accepted, amended by [ADR-0029](0029-terraform-pipeline-in-github-actions.md)
 - Date: 2026-11-05
 
 ## Context
