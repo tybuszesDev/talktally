@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/tybuszesDev/talktally/compare/v0.3.0...v0.3.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **infra:** use only allowed characters in the resource group description ([#94](https://github.com/tybuszesDev/talktally/issues/94)) ([cf148db](https://github.com/tybuszesDev/talktally/commit/cf148db8f988b203f4b75432a1127abd2f32b4cf)), closes [#93](https://github.com/tybuszesDev/talktally/issues/93)
+
 ## [0.3.0](https://github.com/tybuszesDev/talktally/compare/v0.2.0...v0.3.0) (2026-11-15)
 
 
