@@ -146,7 +146,7 @@ The evaluation set in F-45 (20 or more dictations, expected operations reviewed 
 - Audio formats: the pipeline accepts every format Transcribe supports and the mobile app records at the best quality it can ([ADR-0031](../adr/0031-audio-input-formats-and-recording-quality.md)); F-41 picks the recording settings.
 - Ambiguous statements: the model must ask instead of guessing, and the mobile app shows the questions right after processing (ADR-0030, F-44, F-46).
 - The owner asks AWS for access to Anthropic models. If granted, Claude is compared on the F-45 evaluation set before switching (ADR-0030).
-- Before enabling AWS Organizations or IAM Identity Center, check whether that still forfeits the remaining credits on the Paid plan (ADR-0026).
+- Before enabling AWS Organizations or IAM Identity Center, check whether that still forfeits the remaining credits on the Paid plan (ADR-0026, #96).
 
 ## Appendix: prompt v2
 
