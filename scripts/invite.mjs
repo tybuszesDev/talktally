@@ -49,14 +49,34 @@ export function userPoolName(environment) {
 }
 
 /**
- * Finds the ID of the pool with this exact name in the output of `list-user-pools`.
- * @param {string} listOutput
+ * Lists every user pool of the region. `list-user-pools` requires `--max-results`, and that
+ * argument turns off the AWS CLI's automatic pagination, so this follows `NextToken` itself.
+ * @param {AwsRunner} runAws
+ * @returns {Promise<{ Id: string, Name: string }[]>}
+ */
+export async function listUserPools(runAws) {
+  /** @type {{ Id: string, Name: string }[]} */
+  const pools = [];
+  /** @type {string | undefined} */
+  let nextToken;
+  do {
+    const args = ['cognito-idp', 'list-user-pools', '--max-results', '60'];
+    if (nextToken) args.push('--next-token', nextToken);
+    /** @type {{ UserPools?: { Id: string, Name: string }[], NextToken?: string }} */
+    const page = JSON.parse(await runAws(args));
+    pools.push(...(page.UserPools ?? []));
+    nextToken = page.NextToken;
+  } while (nextToken);
+  return pools;
+}
+
+/**
+ * Finds the ID of the pool with this exact name.
+ * @param {{ Id: string, Name: string }[]} pools
  * @param {string} name
  */
-export function findUserPoolId(listOutput, name) {
-  /** @type {{ UserPools?: { Id: string, Name: string }[] }} */
-  const result = JSON.parse(listOutput);
-  const matches = (result.UserPools ?? []).filter((pool) => pool.Name === name);
+export function findUserPoolId(pools, name) {
+  const matches = pools.filter((pool) => pool.Name === name);
   const [match] = matches;
   if (matches.length > 1) throw new Error(`More than one user pool is named ${name}.`);
   if (!match) {
@@ -123,8 +143,7 @@ export async function invite(args, runAws) {
   const { email, environment, resend } = parseInviteArguments(args);
   const poolName = userPoolName(environment);
   try {
-    const pools = await runAws(['cognito-idp', 'list-user-pools', '--max-results', '60']);
-    const userPoolId = findUserPoolId(pools, poolName);
+    const userPoolId = findUserPoolId(await listUserPools(runAws), poolName);
     await runAws(createUserArguments({ userPoolId, email, resend }));
   } catch (error) {
     if (error instanceof Error && !('stderr' in error) && !('code' in error)) throw error;

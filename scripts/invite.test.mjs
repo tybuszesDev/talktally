@@ -6,16 +6,20 @@ import {
   explainAwsError,
   findUserPoolId,
   invite,
+  listUserPools,
   parseInviteArguments,
   USAGE,
 } from './invite.mjs';
 
-const pools = JSON.stringify({
-  UserPools: [
-    { Id: 'eu-central-1_prod', Name: 'talktally-prod-users' },
-    { Id: 'eu-central-1_dev', Name: 'talktally-dev-users' },
-  ],
-});
+const poolList = [
+  { Id: 'eu-central-1_prod', Name: 'talktally-prod-users' },
+  { Id: 'eu-central-1_dev', Name: 'talktally-dev-users' },
+];
+
+/** `list-user-pools` output with every pool on one page. */
+const pools = JSON.stringify({ UserPools: poolList });
+
+const listCall = ['cognito-idp', 'list-user-pools', '--max-results', '60'];
 
 /** An AWS CLI failure as execFile reports it. */
 function cliError(stderr) {
@@ -75,25 +79,41 @@ describe('parseInviteArguments', () => {
   });
 });
 
+describe('listUserPools', () => {
+  it('returns the pools of a single page', async () => {
+    const aws = fakeAws(pools);
+    assert.deepEqual(await listUserPools(aws.run), poolList);
+    assert.deepEqual(aws.calls, [listCall]);
+  });
+
+  // --max-results turns off the AWS CLI's automatic pagination (PR #98 review).
+  it('follows NextToken to the last page', async () => {
+    const aws = fakeAws(
+      JSON.stringify({ UserPools: [poolList[0]], NextToken: 'page-2' }),
+      JSON.stringify({ UserPools: [poolList[1]] }),
+    );
+    assert.deepEqual(await listUserPools(aws.run), poolList);
+    assert.deepEqual(aws.calls, [listCall, [...listCall, '--next-token', 'page-2']]);
+  });
+});
+
 describe('findUserPoolId', () => {
   it('returns the pool with the exact name', () => {
-    assert.equal(findUserPoolId(pools, 'talktally-dev-users'), 'eu-central-1_dev');
+    assert.equal(findUserPoolId(poolList, 'talktally-dev-users'), 'eu-central-1_dev');
   });
 
   it('fails when the pool does not exist', () => {
     assert.throws(
-      () => findUserPoolId(JSON.stringify({ UserPools: [] }), 'talktally-dev-users'),
+      () => findUserPoolId([], 'talktally-dev-users'),
       /No user pool named talktally-dev-users/,
     );
   });
 
   it('fails when two pools have the name', () => {
-    const twice = JSON.stringify({
-      UserPools: [
-        { Id: 'a', Name: 'talktally-dev-users' },
-        { Id: 'b', Name: 'talktally-dev-users' },
-      ],
-    });
+    const twice = [
+      { Id: 'a', Name: 'talktally-dev-users' },
+      { Id: 'b', Name: 'talktally-dev-users' },
+    ];
     assert.throws(() => findUserPoolId(twice, 'talktally-dev-users'), /More than one user pool/);
   });
 });
@@ -169,7 +189,7 @@ describe('invite', () => {
     const aws = fakeAws(pools, '{"User":{}}');
     const message = await invite(['ala@example.com'], aws.run);
 
-    assert.deepEqual(aws.calls[0], ['cognito-idp', 'list-user-pools', '--max-results', '60']);
+    assert.deepEqual(aws.calls[0], listCall);
     assert.deepEqual(aws.calls[1]?.slice(0, 6), [
       'cognito-idp',
       'admin-create-user',
@@ -182,6 +202,16 @@ describe('invite', () => {
       message,
       'Invited ala@example.com to talktally-dev-users. Cognito emails the temporary password.',
     );
+  });
+
+  it('finds the pool on a later page', async () => {
+    const aws = fakeAws(
+      JSON.stringify({ UserPools: [poolList[0]], NextToken: 'page-2' }),
+      JSON.stringify({ UserPools: [poolList[1]] }),
+      '{}',
+    );
+    await invite(['ala@example.com'], aws.run);
+    assert.equal(aws.calls[2]?.[3], 'eu-central-1_dev');
   });
 
   it('uses the prod pool with --env prod', async () => {
