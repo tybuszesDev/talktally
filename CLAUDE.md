@@ -40,6 +40,7 @@ pnpm build                       # Vite web build and Metro iOS bundle
 pnpm check:versions              # fails if react, react-dom or typescript resolve to two versions
 pnpm check:architecture          # dependency-cruiser: ADR-0001 import rules, cycles, undeclared deps
 pnpm check:unused                # knip: unused files, exports, dependencies and catalog entries
+pnpm invite <email>              # invite a user to the dev pool (admin session; --env, --resend)
 pnpm --filter @talktally/web dev # http://localhost:5173
 pnpm --filter @talktally/mobile ios        # build and run on the iPhone 17 simulator
 pnpm --filter @talktally/mobile ios:small  # iPhone 16e; ios:large = iPhone 17 Pro Max
@@ -82,7 +83,7 @@ Full rules: [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md) (Definition o
 ## Environment
 
 - Keep the repository outside iCloud-synced folders (Desktop, Documents): iCloud adds extended attributes that break Xcode code signing.
-- Homebrew tap formulas need the Xcode Command Line Tools, not only Xcode. Local tools: `gitleaks` (brew), Terraform (`hashicorp/tap/terraform`), `tflint` and `trivy` (brew, for infrastructure checks).
+- Homebrew tap formulas need the Xcode Command Line Tools, not only Xcode. Local tools: `gitleaks` (brew), Terraform (`hashicorp/tap/terraform`), `tflint` (cask `terraform-linters/tap/tflint`; no longer in Homebrew core) and `trivy` (brew), for infrastructure checks.
 - The mobile app runs as a development build (`expo-dev-client`), not in Expo Go.
 
 ## Architecture decisions
@@ -122,6 +123,7 @@ Each ADR in one line, as amended. Read the ADR before changing anything in its a
 | [0029](docs/adr/0029-terraform-pipeline-in-github-actions.md) | One Terraform workflow on every PR; required check `Terraform` sums fmt, validate, test, TFLint, Trivy (image by digest) and a masked dev plan comment; merge applies dev with a fresh plan; prod only static checks until F-65; no third-party cost tool, costs watched by AWS Budgets and Cost Anomaly Detection. |
 | [0030](docs/adr/0030-extraction-model-nova-pro-with-forced-tool-use.md) | Extraction uses Amazon Nova Pro (`eu.amazon.nova-pro-v1:0`, Converse API) with a forced tool call and Zod validation instead of structured outputs; Claude is denied for the account; no auto-apply until the F-45 evaluation set; ambiguous statements become clarifications. |
 | [0031](docs/adr/0031-audio-input-formats-and-recording-quality.md) | The pipeline accepts every Transcribe batch format (no conversion, `MediaFormat` from the content type) through a presigned POST limited by type and size; the pipeline copies the upload to a key clients cannot write, reads the duration from the copy and reserves it against the daily quota with a conditional update before transcription; the mobile app records mono at the best quality it can; F-41 picks the settings. |
+| [0032](docs/adr/0032-user-pool-settings-and-invitations.md) | Email is the username; deletion protection on; admin-only creation with `pnpm invite`; passwords of 15+ characters without composition rules; optional TOTP; Cognito default email (50/day) until an SES sender before F-63 or F-65; public SRP-only clients with 60-minute tokens and 30-day (web) or 90-day (mobile) refresh tokens. |
 
 ## Owner actions
 

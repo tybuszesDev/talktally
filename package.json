@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "check:versions": "node scripts/check-single-versions.mjs",
     "check:architecture": "depcruise apps packages --config dependency-cruiser.config.js",
-    "check:unused": "knip"
+    "check:unused": "knip",
+    "invite": "node scripts/invite.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
